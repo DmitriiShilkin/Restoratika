@@ -1,0 +1,15 @@
+{% extends 'default.html' %}
+
+{% block title %}
+    Booking
+{% endblock title %}
+
+{% block content %}
+    <h2>Бронирование</h2>
+    <hr>
+    <form action="" method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <input type="submit" value="Отправить" />
+    </form>
+{% endblock content %}

@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Отмена брони</title>
+</head>
+<body>
+    <h2>Здравствуйте, {{ name }}. Спасибо, что выбрали наш ресторан.</h2>
+    <hr>
+    <ul>К сожалению, свободных столиков на указанную дату и время нет
+        <li>дата: {{ date|date:'d.m.Y' }}</li>
+        <li>время: {{ time|date:'H:i' }}</li>
+    </ul>
+</body>
+</html>

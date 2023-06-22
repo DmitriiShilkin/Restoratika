@@ -1,0 +1,33 @@
+{% extends 'default.html' %}
+
+{% block title %}
+	Application
+{% endblock title %}
+
+{% block content %}
+    <h2>Заявка на бронирование: {{ app.pk }}.<br>
+		Создана: {{ app.created_at|date:'d.m.Y H:i' }}.<br>
+		Статус: {{ app.get_status_display }}.
+	</h2>
+	<hr>
+	Дата брони: {{ app.date|date:'d.m.Y' }}<br>
+	Время брони: {{ app.time|date:'H:i' }}<br>
+	Количество гостей: {{ app.number_persons }}<br>
+	Имя клиента: {{ app.client_name }}<br>
+	Телефон: {{ app.client_phone }}<br>
+	Электронная почта: {{ app.client_email }}<br>
+	Комментарий: {{ app.comment }}<br>
+	<hr>
+    <form action="" method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+		<button> <a href="{% url 'app_validate' pk=app.pk %}">Проверяется</a></button>
+		<br>
+    	<br>
+        <button> <a href="{% url 'app_cancel' pk=app.pk %}">Отменить</a></button>
+		<input type="submit" value="Подтвердить"/>
+		<hr>
+		<button> <a href="{% url 'app_finish' pk=app.pk %}">Завершить</a></button>
+    </form>
+
+{% endblock content %}

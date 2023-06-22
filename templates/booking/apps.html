@@ -1,0 +1,59 @@
+{% extends 'default.html' %}
+
+{% load custom_tags %}
+
+{% block title %}
+	Applications
+{% endblock title %}
+
+{% block content %}
+    <h2>Заявки на бронирование</h2>
+    <hr>
+	<!--  Добавляем форму, которая объединяет набор полей, которые будут отправляться в запросе -->
+	<form action="" method="get">
+		<!-- Переменная, которую мы передали через контекст, может сгенерировать нам форму с полями -->
+		{{ filterset.form.as_p }}
+		<!-- Добавим кнопку отправки данных формы -->
+		<button>&#11013;</button>
+		<button>&#10145;</button>
+	</form>
+
+	{% if apps %}
+		<table>
+			<tr>
+				<th>Номер заявки</th>
+				<th>Создана</th>
+				<th>Статус</th>
+				<th>Столик</th>
+			</tr>
+			{% for app in apps %}
+				<tr>
+					<td><a href="{% url 'app_detail' pk=app.pk %}">{{ app.pk }}</a></td>
+					<td>{{ app.created_at|date:'d.m.Y H:i' }}</td>
+					<td>{{ app.get_status_display }}</td>
+					<td>{{ app.table }}</td>
+				</tr>
+			{% endfor %}
+		</table>
+	{% else %}
+		<p>Заявок нет!</p>
+	{% endif %}
+	<!-- Добавляем пагинацию на страницу -->
+	<!-- Информация о предыдущих страницах -->
+	{% if paginator.num_pages != 1 %}
+		{% if page_obj.has_previous %}
+			<a href="?{% url_replace page=1 %}">&laquo;Первая</a>
+			...
+			<a href="?{% url_replace page=page_obj.previous_page_number %}">{{ page_obj.previous_page_number }}</a>
+		{% endif %}
+		<!-- Информация о текущей странице -->
+		|{{ page_obj.number }}|
+		<!-- Информация о следующих страницах -->
+		{% if page_obj.has_next %}
+			<a href="?{% url_replace page=page_obj.next_page_number %}">{{ page_obj.next_page_number }}</a>
+			...
+			<a href="?{% url_replace page=page_obj.paginator.num_pages %}">Последняя&raquo;</a>
+		{% endif %}
+	{% endif %}
+
+{% endblock content %}

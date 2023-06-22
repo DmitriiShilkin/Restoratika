@@ -1,0 +1,5 @@
+{% extends 'default.html' %}
+
+{% block content %}
+    <h2>Заявка {{ app.id }} от {{ app.created_at|date:'d.m.Y H:i' }} подтверждена!</h2>
+ {% endblock content %}
