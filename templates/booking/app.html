@@ -21,13 +21,21 @@
     <form action="" method="post">
         {% csrf_token %}
         {{ form.as_p }}
-		<button> <a href="{% url 'app_validate' pk=app.pk %}">Проверяется</a></button>
+		{% if app.status == 'NEW' %}
+			<button> <a href="{% url 'app_validate' pk=app.pk %}">Проверяется</a></button>
+		{% endif %}
 		<br>
     	<br>
-        <button> <a href="{% url 'app_cancel' pk=app.pk %}">Отменить</a></button>
-		<input type="submit" value="Подтвердить"/>
+		{% if app.status != 'CAN' and app.status != 'FIN' %}
+        	<button> <a href="{% url 'app_cancel' pk=app.pk %}">Отменить</a></button>
+		{% endif %}
+		{% if app.status == 'NEW' or app.status == 'VAL' %}
+			<input type="submit" value="Подтвердить"/>
+		{% endif %}
 		<hr>
-		<button> <a href="{% url 'app_finish' pk=app.pk %}">Завершить</a></button>
+		{% if app.status != 'CAN' and app.status != 'FIN' %}
+			<button> <a href="{% url 'app_finish' pk=app.pk %}">Завершить</a></button>
+		{% endif %}
     </form>
 
 {% endblock content %}

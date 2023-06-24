@@ -1,5 +1,5 @@
 from django.db.models import Q
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 # from django.shortcuts import redirect
 # импорт стандартных дженериков-представлений из Джанго
 from django.views.generic import ListView, CreateView, UpdateView
@@ -110,8 +110,8 @@ class ApplicationDetail(UpdateView):
             # отправляем уведомление о подтверждении брони клиенту
             # confirmed_email_notification(app.client_name, app.date, app.time, app.client_email)
 
-            # сохраняем данные из формы в нашу БД
-            return super().form_valid(form)
+        # сохраняем данные из формы в нашу БД
+        return super().form_valid(form)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -203,22 +203,24 @@ def application_cancel(request, pk):
         # отправляем уведомление об отмене брони клиенту
         # canceled_email_notification(app.client_name, app.date, app.time, app.client_email)
 
-    queryset = Application.objects.all()
-    new = ApplicationFilter(request.GET, queryset.filter(status='NEW'))
-    context = {
-        'new': new.qs,
-        'app': app
-    }
+        queryset = Application.objects.all()
+        new = ApplicationFilter(request.GET, queryset.filter(status='NEW'))
+        context = {
+            'new': new.qs,
+            'app': app
+        }
 
-    return render(request, 'booking/app_canceled.html', context)
+        return render(request, 'booking/app_canceled.html', context)
+
+    return redirect('app_detail', pk=app.id)
 
 
 # Представление переключения статуса заявки на "Проверяется"
 def application_validate(request, pk):
     # получаем активную заявку
     app = Application.objects.get(id=pk)
-    queryset = Application.objects.all()
-    new = ApplicationFilter(request.GET, queryset.filter(status='NEW'))
+    # queryset = Application.objects.all()
+    # new = ApplicationFilter(request.GET, queryset.filter(status='NEW'))
 
     # присваиваем статус "Проверяется"
     if app.status == 'NEW':
@@ -231,12 +233,13 @@ def application_validate(request, pk):
         # обновляем задачу в Райде
         # update_task(app.table, status_id, task_id)
 
-    context = {
-        'new': new.qs,
-        'app': app
-    }
+    # context = {
+    #     'new': new.qs,
+    #     'app': app
+    # }
 
-    return render(request, 'booking/app.html', context)
+    # return render(request, 'booking/app.html', context)
+    return redirect('app_detail', pk=app.id)
 
 
 # Представление завершения заявки
@@ -262,14 +265,16 @@ def application_finish(request, pk):
         # обновляем задачу в Райде
         # update_task(app.table, status_id, task_id)
 
-    queryset = Application.objects.all()
-    new = ApplicationFilter(request.GET, queryset.filter(status='NEW'))
-    context = {
-        'new': new.qs,
-        'app': app
-    }
+        queryset = Application.objects.all()
+        new = ApplicationFilter(request.GET, queryset.filter(status='NEW'))
+        context = {
+            'new': new.qs,
+            'app': app
+        }
 
-    return render(request, 'booking/app_finished.html', context)
+        return render(request, 'booking/app_finished.html', context)
+
+    return redirect('app_detail', pk=app.id)
 
 
 # Представление для отображения новых заявок
