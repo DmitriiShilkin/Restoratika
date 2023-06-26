@@ -1,0 +1,17 @@
+{% extends 'default.html' %}
+
+{% block title %}
+	Menu Section
+{% endblock title %}
+
+{% block content %}
+    <h2>Изменение раздела меню<br>
+	</h2>
+	<hr>
+    <form action="" method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <p><input type="submit" value="Сохранить"></p>
+    </form>
+
+{% endblock content %}

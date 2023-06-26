@@ -1,0 +1,70 @@
+{% extends 'default.html' %}
+
+{% load custom_tags %}
+
+{% block title %}
+	Dishes
+{% endblock title %}
+
+{% block content %}
+    <h2>Блюда</h2>
+    <hr>
+	<!--  Добавляем форму, которая объединяет набор полей, которые будут отправляться в запросе -->
+	<form action="" method="get">
+		<!-- Переменная, которую мы передали через контекст, может сгенерировать нам форму с полями -->
+		{{ filterset.form.as_p }}
+		<button><a href="{% url 'dish_create' %}">Добавить новое блюдо</a></button>
+	</form>
+
+	{% if dishes %}
+		<table cellpadding="10">
+			<tr>
+				<th>Название</th>
+				<th>Описание</th>
+				<th>Вес</th>
+				<th>Цена</th>
+				<th>Скидка</th>
+				<th>Количество</th>
+				<th>Раздел меню</th>
+			</tr>
+			{% for dish in dishes %}
+				<tr>
+					<td>{{ dish.name }}</td>
+					<td>{{ dish.description }}</td>
+					<td>{{ dish.weight }} гр.</td>
+					<td>{{ dish.price|floatformat:2 }} &#8381;</td>
+					<td>{{ dish.discount }} %</td>
+					<td>{{ dish.quantity }} шт.</td>
+					<td>{{ dish.menu_section }}</td>
+					<td><button><a href="{% url 'dish_detail' pk=dish.pk %}">Изменить</a></button></td>
+					<td><button><a href="{% url 'dish_delete' pk=dish.pk %}">Удалить</a></button></td>
+					{% if not dish.is_in_stop_list %}
+					 	<td><button><a href="{% url 'dish_addsl' pk=dish.pk %}">Добавить в стоп-лист</a></button></td>
+					{% else %}
+						<td><button><a href="{% url 'dish_delsl' pk=dish.pk %}">Удалить из стоп-листа</a></button></td>
+					{% endif %}
+				</tr>
+			{% endfor %}
+		</table>
+	{% else %}
+		<p>Блюд нет!</p>
+	{% endif %}
+	<!-- Добавляем пагинацию на страницу -->
+	<!-- Информация о предыдущих страницах -->
+	{% if paginator.num_pages != 1 %}
+		{% if page_obj.has_previous %}
+			<a href="?{% url_replace page=1 %}">&laquo;Первая</a>
+			...
+			<a href="?{% url_replace page=page_obj.previous_page_number %}">{{ page_obj.previous_page_number }}</a>
+		{% endif %}
+		<!-- Информация о текущей странице -->
+		|{{ page_obj.number }}|
+		<!-- Информация о следующих страницах -->
+		{% if page_obj.has_next %}
+			<a href="?{% url_replace page=page_obj.next_page_number %}">{{ page_obj.next_page_number }}</a>
+			...
+			<a href="?{% url_replace page=page_obj.paginator.num_pages %}">Последняя&raquo;</a>
+		{% endif %}
+	{% endif %}
+
+{% endblock content %}

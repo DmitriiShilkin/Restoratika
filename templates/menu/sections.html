@@ -1,0 +1,55 @@
+{% extends 'default.html' %}
+
+{% load custom_tags %}
+
+{% block title %}
+	Menu Sections
+{% endblock title %}
+
+{% block content %}
+    <h2>Разделы меню</h2>
+    <hr>
+	<!--  Добавляем форму, которая объединяет набор полей, которые будут отправляться в запросе -->
+	<form action="" method="get">
+		<!-- Переменная, которую мы передали через контекст, может сгенерировать нам форму с полями -->
+		{{ filterset.form.as_p }}
+		<button><a href="{% url 'section_create' %}">Добавить новый раздел</a></button>
+	</form>
+
+	{% if sections %}
+		<table cellpadding="10">
+			<tr>
+				<th>Название</th>
+				<th>Описание</th>
+			</tr>
+			{% for section in sections %}
+				<tr>
+					<td>{{ section.name }}</td>
+					<td>{{ section.description }}</td>
+					<td><button><a href="{% url 'section_detail' pk=section.pk %}">Изменить</a></button></td>
+					<td><button><a href="{% url 'section_delete' pk=section.pk %}">Удалить</a></button></td>
+				</tr>
+			{% endfor %}
+		</table>
+	{% else %}
+		<p>Разделов меню нет!</p>
+	{% endif %}
+	<!-- Добавляем пагинацию на страницу -->
+	<!-- Информация о предыдущих страницах -->
+	{% if paginator.num_pages != 1 %}
+		{% if page_obj.has_previous %}
+			<a href="?{% url_replace page=1 %}">&laquo;Первая</a>
+			...
+			<a href="?{% url_replace page=page_obj.previous_page_number %}">{{ page_obj.previous_page_number }}</a>
+		{% endif %}
+		<!-- Информация о текущей странице -->
+		|{{ page_obj.number }}|
+		<!-- Информация о следующих страницах -->
+		{% if page_obj.has_next %}
+			<a href="?{% url_replace page=page_obj.next_page_number %}">{{ page_obj.next_page_number }}</a>
+			...
+			<a href="?{% url_replace page=page_obj.paginator.num_pages %}">Последняя&raquo;</a>
+		{% endif %}
+	{% endif %}
+
+{% endblock content %}

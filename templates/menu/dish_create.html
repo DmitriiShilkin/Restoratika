@@ -1,0 +1,15 @@
+{% extends 'default.html' %}
+
+{% block title %}
+    Dish Add
+{% endblock title %}
+
+{% block content %}
+    <h2>Добавление блюда</h2>
+    <hr>
+    <form action="" method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <input type="submit" value="Сохранить" />
+    </form>
+{% endblock content %}

@@ -98,12 +98,13 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.booking.sqlite3',
     },
 
-    'menu': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.menu.sqlite3',
-    }
+    # 'menu_db': {
+    #     'ENGINE': 'django.db.backends.sqlite3',
+    #     'NAME': BASE_DIR / 'db.menu.sqlite3',
+    # }
 }
 
+# DATABASE_ROUTERS = ['menu.db_routers.MenuRouter']
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators

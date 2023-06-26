@@ -1,10 +1,12 @@
-from datetime import datetime
+# from datetime import datetime
 
+from django.utils import timezone
 from django.urls import reverse
 # импорт стандартных моделей
 from django.db import models
 # импорт валидаторов
 from django.core.validators import MinValueValidator
+
 
 # возможные значения поля position в таблице Staff
 STAFF = [
@@ -15,6 +17,14 @@ STAFF = [
     ('CUR', 'Курьер'),
 ]
 
+STATUSES = [
+    ('NEW', 'Новый'),
+    ('CCK', 'Готовится'),
+    ('ASM', 'На сборке'),
+    ('DEL', 'Передан в доставку'),
+    ('FIN', 'Закрыт'),
+]
+
 
 # Модель таблицы с разделами меню
 class MenuSection(models.Model):
@@ -22,10 +32,10 @@ class MenuSection(models.Model):
     # название раздела
     name = models.CharField(max_length=32, unique=True)
     # описание
-    description = models.CharField(max_length=255, blank=True, null=True)
+    description = models.CharField(max_length=255, blank=True)
 
     def __str__(self):
-        return self.name.title()
+        return self.name
 
 
 # Модель таблицы с данными о персонале
@@ -38,6 +48,9 @@ class Staff(models.Model):
     # номер трудового договора
     contract = models.CharField(max_length=32, unique=True)
 
+    def __str__(self):
+        return self.full_name
+
 
 # Модель таблицы с данными о блюдах
 class Dish(models.Model):
@@ -45,30 +58,44 @@ class Dish(models.Model):
     # название блюда
     name = models.CharField(max_length=128, unique=True)
     # описание блюда
-    description = models.CharField(max_length=255, blank=True, null=True)
+    description = models.CharField(max_length=255, blank=True)
+    # граммовка
+    weight = models.IntegerField(validators=[MinValueValidator(0)])
     # цена блюда
     price = models.FloatField(validators=[MinValueValidator(0.0)])
+    # скидка
+    discount = models.FloatField(default=0.0, validators=[MinValueValidator(0.0)])
     # находится в стоп-листе?
-    stop_list = models.BooleanField(default=False)
+    is_in_stop_list = models.BooleanField(default=False)
+    # количество готовых порций
+    quantity = models.IntegerField(validators=[MinValueValidator(0)])
     # внешний ключ на таблицу с разделами меню
     menu_section = models.ForeignKey(MenuSection, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name
 
 
 # Модель таблицы с данными о заказах
 class Order(models.Model):
     # поля таблицы, поле id создается автоматически, его указывать не нужно
     # время поступления заказа
-    time_in = models.DateTimeField(auto_now_add=True)
+    time_in = models.DateTimeField(default=timezone.now, editable=False)
     # время готовности заказа
-    time_out = models.DateTimeField(blank=True, null=True)
+    time_out = models.DateTimeField(blank=True)
     # общая стоимость заказа
     cost = models.FloatField(validators=[MinValueValidator(0.0)])
     # на вынос?
-    take_away = models.BooleanField(default=False)
+    is_take_away = models.BooleanField(default=False)
     # завершен?
-    complete = models.BooleanField(default=False)
+    is_complete = models.BooleanField(default=False)
+    # оплачен?
+    is_paid = models.BooleanField(default=False)
+    # статус
+    status = models.CharField(max_length=3, choices=STATUSES, default='NEW')
     # внешний ключ на исполнителя заказа
     staff = models.ForeignKey(MenuSection, on_delete=models.CASCADE)
+    # внешний ключ на промежуточную таблицу блюда-заказы
     dish = models.ManyToManyField(Dish, through='DishOrder', related_name='order')
 
     # функция reverse позволяет нам указывать не путь вида /booking/…, а название пути, которое мы задали
@@ -78,8 +105,9 @@ class Order(models.Model):
 
     # фиксируем время завершения заказа
     def finish_order(self):
-        self.time_out = datetime.now()
-        self.complete = True
+        self.time_out = timezone.now()
+        self.is_complete = True
+        self.is_paid = True
         self.save()
 
     # возвращает время выполнения заказа в минутах
@@ -87,7 +115,7 @@ class Order(models.Model):
         if self.complete:
             return (self.time_out - self.time_in).total_seconds() // 60
         else:
-            return (datetime.now() - self.time_in).total_seconds() // 60
+            return (timezone.now() - self.time_in).total_seconds() // 60
 
 
 # Модель для вспомогательной таблицы Блюда-Заказы
