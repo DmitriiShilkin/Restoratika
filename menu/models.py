@@ -59,7 +59,9 @@ class Dish(models.Model):
     name = models.CharField(max_length=128, unique=True)
     # описание блюда
     description = models.CharField(max_length=255, blank=True)
-    # граммовка
+    # картинка
+    picture = models.ImageField(blank=True)
+    # вес
     weight = models.IntegerField(validators=[MinValueValidator(0)])
     # цена блюда
     price = models.FloatField(validators=[MinValueValidator(0.0)])

@@ -51,6 +51,7 @@ class DishForm(forms.ModelForm):
         fields = [
             'name',
             'description',
+            'picture',
             'weight',
             'price',
             'discount',
@@ -62,6 +63,7 @@ class DishForm(forms.ModelForm):
         labels = {
             'name': _('Название'),
             'description': _('Описание'),
+            'picture': _('Иконка'),
             'weight': _('Вес, гр.'),
             'price': _('Цена, руб.'),
             'discount': _('Скидка, %'),

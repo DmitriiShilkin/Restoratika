@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.views.generic import ListView, UpdateView, CreateView, DeleteView
 
+from .filters import DishFilter
 from .forms import MenuSectionForm, DishForm
 from .models import MenuSection, Dish
 
@@ -54,6 +55,22 @@ class DishListView(ListView):
     template_name = 'menu/dishes.html'
     context_object_name = 'dishes'
     paginate_by = 10
+
+    def get_queryset(self):
+        # Получаем обычный запрос
+        queryset = super().get_queryset()
+        # Используем наш класс фильтрации.
+        # Сохраняем нашу фильтрацию в объекте класса,
+        # чтобы потом добавить в контекст и использовать в шаблоне.
+        self.filterset = DishFilter(self.request.GET, queryset)
+        # Возвращаем из функции отфильтрованный список блюд
+        return self.filterset.qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Добавляем в контекст объект фильтрации.
+        context['filterset'] = self.filterset
+        return context
 
 
 # Представление для просмотра и редактирования блюда

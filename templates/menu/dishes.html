@@ -13,6 +13,7 @@
 	<form action="" method="get">
 		<!-- Переменная, которую мы передали через контекст, может сгенерировать нам форму с полями -->
 		{{ filterset.form.as_p }}
+		<input type="submit" value="Найти" /><hr>
 		<button><a href="{% url 'dish_create' %}">Добавить новое блюдо</a></button>
 	</form>
 
