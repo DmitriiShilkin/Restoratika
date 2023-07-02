@@ -1,31 +1,38 @@
 from django_filters import FilterSet, CharFilter, ModelChoiceFilter, ChoiceFilter
 
-from django.forms import Select, TextInput
+from django.forms import TextInput
 
-from .models import Dish, MenuSection
+from .models import Dish, MenuSection, Store
 
 STOPLIST = [
-    ('True', 'В стоп-листе'),
-    ('False', 'Не в стоп-листе'),
+    ('False', 'Да'),
+    ('True', 'Нет'),
 ]
 
 
 # Создаем свой набор фильтров для модели Dish.
 class DishFilter(FilterSet):
-    # поиск по имени
-    name = CharFilter(widget=TextInput(attrs={'placeholder': 'Название'}),
-                      label='',
-                      lookup_expr='icontains'
+    # поиск по наименованию
+    name = CharFilter(widget=TextInput(attrs={'placeholder': 'Поиск'}),
+                      label='Наименование',
+                      lookup_expr='iregex'
                       )
-    # поиск по разделу меню
+
+    # поиск по складу
+    store = ModelChoiceFilter(queryset=Store.objects.all(),
+                              label='Склад',
+                              empty_label='Все',
+                              )
+
+    # поиск по категории
     menu_section = ModelChoiceFilter(queryset=MenuSection.objects.all(),
-                                     label='',
-                                     empty_label='Все разделы меню',
+                                     label='Категория',
+                                     empty_label='Все',
                                      )
     # поиск по стоп-листу
     is_in_stop_list = ChoiceFilter(choices=STOPLIST,
-                                   label='',
-                                   empty_label='Все блюда',
+                                   label='В наличии',
+                                   empty_label='Все',
                                    lookup_expr='exact',
                                    )
 
@@ -34,7 +41,8 @@ class DishFilter(FilterSet):
         model = Dish
         # В fields мы описываем по каким полям модели будет производиться фильтрация.
         fields = [
-            'name',
+            'store',
             'menu_section',
+            'name',
             'is_in_stop_list',
         ]

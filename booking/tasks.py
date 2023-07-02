@@ -7,14 +7,36 @@ from django.core.mail import EmailMultiAlternatives
 
 
 # отправка уведомления в telegram
-def telegram_notification(booking_date, booking_time, client_name, client_phone, num_of_person):
-    token = settings.TELBOT_TOKEN
-    chat_id = settings.CHAT_ID
-    message = f"Поступила новая заявка на бронирование столика!\n" \
-              f"Дата:  {booking_date} в {booking_time}\n" \
-              f"Гостей: {num_of_person} чел.\n" \
-              f"Имя: {client_name} тел. {client_phone}"
-    print(requests.get(f"https://api.telegram.org/bot{token}/sendMessage?chat_id={chat_id}&text={message}").json())
+def telegram_notification(booking_id, booking_date, booking_time, client_name, client_phone, num_of_person):
+    data = {
+        "event_code": "First_Restoratika_test",
+        "user_identifier": settings.USER_IDENTIFIER,
+        "project_identifier": settings.PROJECT_IDENTIFIER,
+        "message_recipients": [
+            {
+                "telegram_chat_id": -900195133
+            }
+        ],
+        "parameters": {
+            "c_booking_date": booking_date.strftime('%d.%m.%Y'),
+            "c_booking_id": booking_id,
+            "c_booking_time": booking_time.strftime('%H:%M'),
+            "c_client_name": client_name,
+            "c_client_phone": client_phone,
+            "c_num_of_person": num_of_person
+        }
+    }
+    requests.post('https://notification.skroy.ru/notification', json=data)
+
+
+# def telegram_notification(booking_date, booking_time, client_name, client_phone, num_of_person):
+#     token = settings.TELBOT_TOKEN
+#     chat_id = settings.CHAT_ID
+#     message = f"Поступила новая заявка на бронирование столика!\n" \
+#               f"Дата:  {booking_date} в {booking_time}\n" \
+#               f"Гостей: {num_of_person} чел.\n" \
+#               f"Имя: {client_name} тел. {client_phone}"
+#     print(requests.get(f"https://api.telegram.org/bot{token}/sendMessage?chat_id={chat_id}&text={message}").json())
 
 
 # Отправка уведомления на почту клиента о подтверждении брони

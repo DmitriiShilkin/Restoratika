@@ -79,7 +79,7 @@ class ApplicationForm(forms.ModelForm):
     client_email = forms.EmailField(widget=EmailInput(attrs={'type': 'email'}), label='E-mail')
     hours = forms.ChoiceField(widget=forms.RadioSelect, choices=HOURS_STATES, label='Часы')
     minutes = forms.ChoiceField(widget=forms.RadioSelect, choices=MINUTES_STATES, label='Минуты')
-    guest_num = forms.ChoiceField(widget=forms.RadioSelect, choices=GUESTS_STATES, label='', required=False)
+    guest_num = forms.ChoiceField(widget=forms.RadioSelect, choices=GUESTS_STATES, label='', required=False, initial='2')
 
     class Meta:
         # наша модель

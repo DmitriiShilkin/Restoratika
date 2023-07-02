@@ -1,59 +1,696 @@
 {% extends 'default.html' %}
 
 {% load custom_tags %}
-
 {% block title %}
-	Applications
+    Applications
 {% endblock title %}
-
+{% load static %}
 {% block content %}
-    <h2>Заявки на бронирование</h2>
-    <hr>
-	<!--  Добавляем форму, которая объединяет набор полей, которые будут отправляться в запросе -->
-	<form action="" method="get">
+
+    <div class="container-fluid pt-0 apps-box">
+        <div class="row">
+
+            <div class="col-md-4">
+                <button type="button" onclick="window.location.href='/booking/create/'" class="create-app">Создать резерв</button></div>
+            <div class="col-md-4"><div class="date-box"><span>
+
+             <form action="" method="get" class="flex-box">
 		<!-- Переменная, которую мы передали через контекст, может сгенерировать нам форму с полями -->
-		{{ filterset.form.as_p }}
-		<!-- Добавим кнопку отправки данных формы -->
-		<button>&#11013;</button>
-		<button>&#10145;</button>
+                 <!-- Добавим кнопку отправки данных формы -->
+                 <!-- <input type="submit" value="Найти" /> -->
+		<button id="prev_day"><img src="/static/img/leftarrow_black.png" alt="Стрелка"></button>
+        <div id="div_id_date" class="form-cont">
+
+		{{ filterset.form }}
+            <div id="reformDate" class="center-content"></div>
+</div>
+		<button id="next_day"><img src="/static/img/rightarrow.png" alt="Стрелка"></button>
 	</form>
 
-	{% if apps %}
-		<table>
-			<tr>
-				<th>Номер заявки</th>
-				<th>Создана</th>
-				<th>Статус</th>
-				<th>Столик</th>
-			</tr>
-			{% for app in apps %}
-				<tr>
-					<td><a href="{% url 'app_detail' pk=app.pk %}">{{ app.pk }}</a></td>
-					<td>{{ app.created_at|date:'d.m.Y H:i' }}</td>
-					<td>{{ app.get_status_display }}</td>
-					<td>{{ app.table }}</td>
-				</tr>
-			{% endfor %}
-		</table>
-	{% else %}
-		<p>Заявок нет!</p>
-	{% endif %}
-	<!-- Добавляем пагинацию на страницу -->
-	<!-- Информация о предыдущих страницах -->
-	{% if paginator.num_pages != 1 %}
-		{% if page_obj.has_previous %}
-			<a href="?{% url_replace page=1 %}">&laquo;Первая</a>
-			...
-			<a href="?{% url_replace page=page_obj.previous_page_number %}">{{ page_obj.previous_page_number }}</a>
-		{% endif %}
-		<!-- Информация о текущей странице -->
-		|{{ page_obj.number }}|
-		<!-- Информация о следующих страницах -->
-		{% if page_obj.has_next %}
-			<a href="?{% url_replace page=page_obj.next_page_number %}">{{ page_obj.next_page_number }}</a>
-			...
-			<a href="?{% url_replace page=page_obj.paginator.num_pages %}">Последняя&raquo;</a>
-		{% endif %}
-	{% endif %}
+
+
+
+        </span><br></div></div>
+            <div class="col-md-4">
+                <div class="icon-box">
+                    <!--
+             <div class="icon-1 icon-frame">
+                 <button onClick="showCalendar()"><img class="avatar-img" src="{% static 'img/calendar.png' %}" alt="Календарь"></button>
+             </div>
+
+               <div class="icon-2 icon-frame">
+                   <button onClick="showStatus()"><img class="avatar-img"src="{% static 'img/search.png' %}" alt="Лупа"></button>
+               </div>
+
+                <div class="icon-3 icon-frame">
+                    <img class="avatar-img" src="{% static 'img/gear.png' %}" alt="Шестеренка">
+                </div>-->
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid reservations-box">
+
+        <div class="row" style="column-gap: 40px">
+
+            <div class="col approved-reservations">
+
+
+                <div class="m-4 pb-2">
+                    <ul class="nav nav-tabs" id="myTab">
+                        <li class="nav-item">
+                            <a href="#approved" class="nav-link active" data-bs-toggle="tab">Подтвержденные</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#archive" class="nav-link" data-bs-toggle="tab">Архивные</a>
+                        </li>
+
+                    </ul>
+
+
+                    <div class="tab-content">
+                        <div class="tab-pane fade show active" id="approved">
+
+                            <main>
+
+                                <ul id="paginated-listAp" data-current-page="1" aria-live="polite">
+                                    {% if confirmed %}
+                                        {% for a in confirmed %}
+                                            <li>
+                                                <div class="reservation-line">
+                                                    <div class="time-col"><span>{{ a.time|date:'H:i' }}</span></div>
+                                                    <div class="guest-col center-content"><img class="guest-icon" src="{% static 'img/guest.png' %}" alt="Гости"><span>{{ a.number_persons }}</span></div>
+                                                    <div class="contact-col center-content">
+                                                        <div class="contact-name common-font">{{ a.client_name }}</div>
+                                                        <div class="contact-phone common-font">{{ a.client_phone }}</div>
+                                                    </div>
+                                                    <div class="comment-col common-font center-content">{{ a.comment }}</div>
+                                                    <div class="table-col center-content"><span class="table-num center-content"><span>{{ a.table }}</span></div>
+                                                    <a class="center-content" href="{% url 'app_detail' pk=a.pk %}"><div class="link-arrow center-content"><img src="{% static 'img/rightarrow.png' %}" alt="Стрелка"></div></a>
+                                                </div>
+                                            </li>
+                                        {% endfor %}
+                                    {% else %}
+                                        <p style="text-align: center; margin:40px">Подтвержденных заявок нет..</p>
+                                    {% endif %}
+                                </ul>
+
+                                <nav class="pagination-containerAp">
+                                    <button class="pagination-buttonAp" id="prev-buttonAp" aria-label="Previous page" title="Previous page">
+                                        <img src="/static/img/leftarrow_black.png" alt="Стрелка">
+                                    </button>
+
+                                    <div id="pagination-numbersAp">
+
+                                    </div>
+
+                                    <button class="pagination-buttonAp" id="next-buttonAp" aria-label="Next page" title="Next page">
+                                        <img src="/static/img/rightarrow.png" alt="Стрелка">
+                                    </button>
+                                </nav>
+                            </main>
+
+
+                        </div>
+
+
+                        <div class="tab-pane fade" id="archive">
+
+                            <main>
+
+                                <ul id="paginated-listAr" data-current-page="1" aria-live="polite">
+                                    {% if archive %}
+                                        {% for a in archive %}
+                                            <li>
+                                                <div class="reservation-line">
+                                                    <div class="time-col-archive"><span>{{ a.time|date:'H:i' }}</span></div>
+                                                    <div class="guest-col center-content"><img class="guest-icon" src="{% static 'img/guest.png' %}" alt="Гости"><span>{{ a.number_persons }}</span></div>
+                                                    <div class="contact-col center-content">
+                                                        <div class="contact-name common-font">{{ a.client_name }}</div>
+                                                        <div class="contact-phone common-font">{{ a.client_phone }}</div>
+                                                    </div>
+                                                    <div class="comment-col common-font center-content">{{ a.comment }}</div>
+                                                    <div class="table-col center-content"><span class="table-num center-content"><span>{{ a.table }}</span></div>
+                                                    <a class="center-content" href="{% url 'app_detail' pk=a.pk %}"><div class="link-arrow center-content"><img src="{% static 'img/rightarrow.png' %}" alt="Стрелка"></div></a>
+                                                </div>
+                                            </li>
+                                        {% endfor %}
+                                    {% else %}
+                                        <p style="text-align: center; margin:40px">Архивных заявок нет..</p>
+                                    {% endif %}
+                                </ul>
+
+                                <nav class="pagination-containerAr">
+                                    <button class="pagination-buttonAr" id="prev-buttonAr" aria-label="Previous page" title="Previous page">
+                                        <img src="/static/img/leftarrow_black.png" alt="Стрелка">
+                                    </button>
+
+                                    <div id="pagination-numbersAr">
+
+                                    </div>
+
+                                    <button class="pagination-buttonAr" id="next-buttonAr" aria-label="Next page" title="Next page">
+                                        <img src="/static/img/rightarrow.png" alt="Стрелка">
+                                    </button>
+                                </nav>
+                            </main>
+
+
+
+                        </div>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+            <div class="col new-reservations">
+
+                <h3 class="res-room text-center">Новые заявки</h3>
+
+                <div class="check_box">
+                    <input class="custom-checkbox" type="checkbox" id="checkStat" name="checkStat" value="yes">
+                    <label for="checkStat">На рассмотрении</label>
+                </div>
+
+
+
+                <main>
+
+                    <ul id="paginated-list" data-current-page="1" aria-live="polite">
+                        {% if new_val %}
+                            {% for a in new_val %}
+                                <li>
+                                    <div class="reservation-line-new">
+                                        <div class="time-col-new">
+                                            {% if a.status == 'NEW' %}
+                                                <div id="redDotStat"></div>
+                                            {% endif %}
+
+                                            <span>{{ a.time|date:'H:i' }}</span></div>
+                                        <div class="guest-col center-content"><img class="guest-icon" src="{% static 'img/guest.png' %}" alt="Гости"><span>{{ a.number_persons }}</span></div>
+                                        <div class="contact-col center-content">
+                                            <div class="contact-name common-font">{{ a.client_name }}</div>
+                                            <div class="contact-phone common-font">{{ a.client_phone }}</div>
+                                        </div>
+                                        <a class="center-content" href="{% url 'app_detail' pk=a.pk %}"><div class="link-arrow center-content"><img src="{% static 'img/rightarrow.png' %}" alt="Стрелка"></div></a>
+                                    </div></li>
+
+                            {% endfor %}
+                        {% else %}
+                            <p style="text-align: center; margin:40px">Новых заявок нет..</p>
+                        {% endif %}
+                    </ul>
+
+                    <nav class="pagination-container">
+                        <button class="pagination-button" id="prev-button" aria-label="Previous page" title="Previous page">
+                            <img src="/static/img/leftarrow_black.png" alt="Стрелка">
+                        </button>
+
+                        <div id="pagination-numbers">
+
+                        </div>
+
+                        <button class="pagination-button" id="next-button" aria-label="Next page" title="Next page">
+                            <img src="/static/img/rightarrow.png" alt="Стрелка">
+                        </button>
+                    </nav>
+
+                </main>
+
+
+
+
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+    <br> <br>
+
+
+
+
+
+    <script>
+
+
+
+
+
+        $('#checkStat').click(function () {
+
+            if ($('#checkStat').is(':checked') == true) {
+                $('#paginated-list').html('{% for a in check %}<li><div class="reservation-line-new"><div class="time-col-new">{% if a.status == 'NEW' %}<div id="redDotStat"></div>{% endif %}<span>{{ a.time|date:'H:i' }}</span></div><div class="guest-col center-content"><img class="guest-icon" src="{% static 'img/guest.png' %}" alt="Гости"><span>{{ a.number_persons }}</span></div><div class="contact-col center-content"><div class="contact-name common-font">{{ a.client_name }}</div><div class="contact-phone common-font">{{ a.client_phone }}</div></div><a class="center-content" href="{% url 'app_detail' pk=a.pk %}"><div class="link-arrow center-content"><img src="{% static 'img/rightarrow.png' %}" alt="Стрелка"></div></a></div></li>{% endfor %}')
+                $('#pagination-container').html('<button class="pagination-button" id="prev-button" aria-label="Previous page" title="Previous page"> <img src="/static/img/leftarrow_black.png" alt="Стрелка"></button><div id="pagination-numbers"></div><button class="pagination-button" id="next-button" aria-label="Next page" title="Next page"><img src="/static/img/rightarrow.png" alt="Стрелка"></button></nav>')
+                $('#pagination-numbers').html('')
+                paginationStart()
+            }
+            else {
+                $('#paginated-list').html('{% for a in new_val %}<li><div class="reservation-line-new"><div class="time-col-new">{% if a.status == 'NEW' %}<div id="redDotStat"></div>{% endif %}<span>{{ a.time|date:'H:i' }}</span></div><div class="guest-col center-content"><img class="guest-icon" src="{% static 'img/guest.png' %}" alt="Гости"><span>{{ a.number_persons }}</span></div><div class="contact-col center-content"><div class="contact-name common-font">{{ a.client_name }}</div><div class="contact-phone common-font">{{ a.client_phone }}</div></div><a class="center-content" href="{% url 'app_detail' pk=a.pk %}"><div class="link-arrow center-content"><img src="{% static 'img/rightarrow.png' %}" alt="Стрелка"></div></a></div></li>{% endfor %}')
+                $('#pagination-container').html('<button class="pagination-button" id="prev-button" aria-label="Previous page" title="Previous page"> <img src="/static/img/leftarrow_black.png" alt="Стрелка"></button><div id="pagination-numbers"></div><button class="pagination-button" id="next-button" aria-label="Next page" title="Next page"><img src="/static/img/rightarrow.png" alt="Стрелка"></button></nav>')
+                $('#pagination-numbers').html('')
+                paginationStart()
+            }
+
+        });
+
+
+
+
+        let myDate = $('#id_date').val();
+        let month = myDate[5] + myDate[6];
+        if (month == '05') {
+            month = 'мая'
+        } else if (month == '06') {
+            month = 'июня'
+        } else if (month == '07') {
+            month = 'июля'
+        } else if (month == '08') {
+            month = 'августа'
+        } else if (month == '09') {
+            month = 'сентября'
+        } else if (month == '10') {
+            month = 'октября'
+        } else if (month == '11') {
+            month = 'ноября'
+        } else if (month == '12') {
+            month = 'декабря'
+        } else if (month == '01') {
+            month = 'января'
+        } else if (month == '02') {
+            month = 'февраля'
+        } else if (month == '03') {
+            month = 'марта'
+        } else if (month == '04') {
+            month = 'апреля'
+        }
+
+
+        $('#reformDate').html(myDate[8]+myDate[9] + ' ' + month)
+
+        $("#reformDate").click(function() {
+            showCalendar();
+        });
+
+
+        function showCalendar() {
+            let el = document.getElementById("id_date");
+            el.showPicker()
+        }
+
+        function showStatus() {
+            let elstatus = document.getElementById("id_status");
+            elstatus.focus()
+        }
+
+
+        $( function() {
+            $('#id_date').change(function(){
+                $('.date-box form').submit();
+            });
+        });
+
+
+
+        $('#next_day').on('click', function () {
+            let now = $('#id_date').val();
+            now = new Date(new Date(now).setDate(new Date(now).getDate() + 1));
+            function convert(date) {
+                let d = Date.parse(date)
+                let date_obj = new Date(d)
+                return `${date_obj.getFullYear()}-${date_obj.toLocaleString("default", { month: "2-digit" })}-${date_obj.toLocaleString("default", { day: "2-digit"})}`
+            }
+            tomorrow = convert(now);
+            $('#id_date').val(tomorrow);
+        });
+
+        $('#prev_day').on('click', function () {
+            let now = $('#id_date').val();
+            now = new Date(new Date(now).setDate(new Date(now).getDate() - 1));
+            function convert(date) {
+                let d = Date.parse(date)
+                let date_obj = new Date(d)
+                return `${date_obj.getFullYear()}-${date_obj.toLocaleString("default", { month: "2-digit" })}-${date_obj.toLocaleString("default", { day: "2-digit"})}`
+            }
+            tomorrow = convert(now);
+            $('#id_date').val(tomorrow);
+        });
+
+        $(document).ready(function(){
+            $("#myTab a:first").tab("show"); // show first tab
+        });
+
+
+
+        /* NEW PAGINATION  */
+        paginationStart()
+
+        function paginationStart() {
+
+            let paginationNumbers = document.getElementById("pagination-numbers");
+            let paginatedList = document.getElementById("paginated-list");
+            let listItems = paginatedList.querySelectorAll("li");
+            let nextButton = document.getElementById("next-button");
+            let prevButton = document.getElementById("prev-button");
+
+            let paginationLimit = 5;
+
+            let pageCount = Math.ceil(listItems.length / paginationLimit);
+            let currentPage = 1;
+
+            let disableButton = (button) => {
+                button.classList.add("disabled");
+                button.setAttribute("disabled", true);
+            };
+
+            let enableButton = (button) => {
+                button.classList.remove("disabled");
+                button.removeAttribute("disabled");
+            };
+
+            let handlePageButtonsStatus = () => {
+                if (currentPage === 1) {
+                    disableButton(prevButton);
+                } else {
+                    enableButton(prevButton);
+                }
+
+                if (pageCount === currentPage) {
+                    disableButton(nextButton);
+                } else {
+                    enableButton(nextButton);
+                }
+            };
+
+            let handleActivePageNumber = () => {
+                document.querySelectorAll(".pagination-number").forEach((button) => {
+                    button.classList.remove("active");
+                    let pageIndex = Number(button.getAttribute("page-index"));
+                    if (pageIndex == currentPage) {
+                        button.classList.add("active");
+                    }
+                });
+            };
+
+            let appendPageNumber = (index) => {
+                const pageNumber = document.createElement("button");
+                pageNumber.className = "pagination-number";
+                pageNumber.innerHTML = index;
+                pageNumber.setAttribute("page-index", index);
+                pageNumber.setAttribute("aria-label", "Page " + index);
+
+                paginationNumbers.appendChild(pageNumber);
+            };
+
+            let getPaginationNumbers = () => {
+                for (let i = 1; i <= pageCount; i++) {
+                    appendPageNumber(i);
+                }
+            };
+
+            let setCurrentPage = (pageNum) => {
+                currentPage = pageNum;
+
+                handleActivePageNumber();
+                handlePageButtonsStatus();
+
+                let prevRange = (pageNum - 1) * paginationLimit;
+                let currRange = pageNum * paginationLimit;
+
+                listItems.forEach((item, index) => {
+                    item.classList.add("hidden");
+                    if (index >= prevRange && index < currRange) {
+                        item.classList.remove("hidden");
+                    }
+                });
+            };
+
+
+            getPaginationNumbers();
+            setCurrentPage(1);
+
+            prevButton.addEventListener("click", () => {
+                setCurrentPage(currentPage - 1);
+            });
+
+            nextButton.addEventListener("click", () => {
+                setCurrentPage(currentPage + 1);
+            });
+
+            document.querySelectorAll(".pagination-number").forEach((button) => {
+                let pageIndex = Number(button.getAttribute("page-index"));
+
+                if (pageIndex) {
+                    button.addEventListener("click", () => {
+                        setCurrentPage(pageIndex);
+                    });
+                }
+            });
+
+
+            if (pageCount < 2) {
+                $('.pagination-container').addClass('hidden');
+            } else {
+                $('.pagination-container').removeClass('hidden');
+            }
+        }
+
+        /* NEW PAGINATION END  */
+
+        /* APPROVED PAGINATION */
+
+        const paginationNumbersAp = document.getElementById("pagination-numbersAp");
+        const paginatedListAp = document.getElementById("paginated-listAp");
+        const listItemsAp = paginatedListAp.querySelectorAll("li");
+        const nextButtonAp = document.getElementById("next-buttonAp");
+        const prevButtonAp = document.getElementById("prev-buttonAp");
+
+        const paginationLimitAp = 5;
+        const pageCountAp = Math.ceil(listItemsAp.length / paginationLimitAp);
+        let currentPageAp = 1;
+
+        const disableButtonAp = (button) => {
+            button.classList.add("disabled");
+            button.setAttribute("disabled", true);
+        };
+
+        const enableButtonAp = (button) => {
+            button.classList.remove("disabled");
+            button.removeAttribute("disabled");
+        };
+
+        const handlePageButtonsStatusAp = () => {
+            if (currentPageAp === 1) {
+                disableButtonAp(prevButtonAp);
+            } else {
+                enableButtonAp(prevButtonAp);
+            }
+
+            if (pageCountAp === currentPageAp) {
+                disableButtonAp(nextButtonAp);
+            } else {
+                enableButtonAp(nextButtonAp);
+            }
+        };
+
+        const handleActivePageNumberAp = () => {
+            document.querySelectorAll(".pagination-numberAp").forEach((button) => {
+                button.classList.remove("active");
+                const pageIndex = Number(button.getAttribute("page-index"));
+                if (pageIndex == currentPageAp) {
+                    button.classList.add("active");
+                }
+            });
+        };
+
+        const appendPageNumberAp = (index) => {
+            const pageNumber = document.createElement("button");
+            pageNumber.className = "pagination-numberAp";
+            pageNumber.innerHTML = index;
+            pageNumber.setAttribute("page-index", index);
+            pageNumber.setAttribute("aria-label", "Page " + index);
+
+            paginationNumbersAp.appendChild(pageNumber);
+        };
+
+        const getPaginationNumbersAp = () => {
+            for (let i = 1; i <= pageCountAp; i++) {
+                appendPageNumberAp(i);
+            }
+        };
+
+        const setCurrentPageAp = (pageNum) => {
+            currentPageAp = pageNum;
+
+            handleActivePageNumberAp();
+            handlePageButtonsStatusAp();
+
+            const prevRangeAp = (pageNum - 1) * paginationLimitAp;
+            const currRangeAp = pageNum * paginationLimitAp;
+
+            listItemsAp.forEach((item, index) => {
+                item.classList.add("hidden");
+                if (index >= prevRangeAp && index < currRangeAp) {
+                    item.classList.remove("hidden");
+                }
+            });
+        };
+
+        window.addEventListener("load", () => {
+            getPaginationNumbersAp();
+            setCurrentPageAp(1);
+
+            prevButtonAp.addEventListener("click", () => {
+                setCurrentPageAp(currentPageAp - 1);
+            });
+
+            nextButtonAp.addEventListener("click", () => {
+                setCurrentPageAp(currentPageAp + 1);
+            });
+
+            document.querySelectorAll(".pagination-numberAp").forEach((button) => {
+                const pageIndex = Number(button.getAttribute("page-index"));
+
+                if (pageIndex) {
+                    button.addEventListener("click", () => {
+                        setCurrentPageAp(pageIndex);
+                    });
+                }
+            });
+        });
+
+        if (pageCountAp < 2) {
+            $('.pagination-containerAp').addClass('hidden');
+        } else {
+            $('.pagination-containerAp').removeClass('hidden');
+        }
+
+
+        /* APPROVED PAGINATION END */
+
+        /* ARCHIVED PAGINATION */
+
+        const paginationNumbersAr = document.getElementById("pagination-numbersAr");
+        const paginatedListAr = document.getElementById("paginated-listAr");
+        const listItemsAr = paginatedListAr.querySelectorAll("li");
+        const nextButtonAr = document.getElementById("next-buttonAr");
+        const prevButtonAr = document.getElementById("prev-buttonAr");
+
+        const paginationLimitAr = 5;
+        const pageCountAr = Math.ceil(listItemsAr.length / paginationLimitAr);
+        let currentPageAr = 1;
+
+        const disableButtonAr = (button) => {
+            button.classList.add("disabled");
+            button.setAttribute("disabled", true);
+        };
+
+        const enableButtonAr = (button) => {
+            button.classList.remove("disabled");
+            button.removeAttribute("disabled");
+        };
+
+        const handlePageButtonsStatusAr = () => {
+            if (currentPageAr === 1) {
+                disableButtonAr(prevButtonAr);
+            } else {
+                enableButtonAr(prevButtonAr);
+            }
+
+            if (pageCountAr === currentPageAr) {
+                disableButtonAr(nextButtonAr);
+            } else {
+                enableButtonAr(nextButtonAr);
+            }
+        };
+
+        const handleActivePageNumberAr = () => {
+            document.querySelectorAll(".pagination-numberAr").forEach((button) => {
+                button.classList.remove("active");
+                const pageIndex = Number(button.getAttribute("page-index"));
+                if (pageIndex == currentPageAr) {
+                    button.classList.add("active");
+                }
+            });
+        };
+
+        const appendPageNumberAr = (index) => {
+            const pageNumber = document.createElement("button");
+            pageNumber.className = "pagination-numberAr";
+            pageNumber.innerHTML = index;
+            pageNumber.setAttribute("page-index", index);
+            pageNumber.setAttribute("aria-label", "Page " + index);
+
+            paginationNumbersAr.appendChild(pageNumber);
+        };
+
+        const getPaginationNumbersAr = () => {
+            for (let i = 1; i <= pageCountAr; i++) {
+                appendPageNumberAr(i);
+            }
+        };
+
+        const setCurrentPageAr = (pageNum) => {
+            currentPageAr = pageNum;
+
+            handleActivePageNumberAr();
+            handlePageButtonsStatusAr();
+
+            const prevRangeAr = (pageNum - 1) * paginationLimitAr;
+            const currRangeAr = pageNum * paginationLimitAr;
+
+            listItemsAr.forEach((item, index) => {
+                item.classList.add("hidden");
+                if (index >= prevRangeAr && index < currRangeAr) {
+                    item.classList.remove("hidden");
+                }
+            });
+        };
+
+        window.addEventListener("load", () => {
+            getPaginationNumbersAr();
+            setCurrentPageAr(1);
+
+            prevButtonAr.addEventListener("click", () => {
+                setCurrentPageAr(currentPageAr - 1);
+            });
+
+            nextButtonAr.addEventListener("click", () => {
+                setCurrentPageAr(currentPageAr + 1);
+            });
+
+            document.querySelectorAll(".pagination-numberAr").forEach((button) => {
+                const pageIndex = Number(button.getAttribute("page-index"));
+
+                if (pageIndex) {
+                    button.addEventListener("click", () => {
+                        setCurrentPageAr(pageIndex);
+                    });
+                }
+            });
+        });
+
+        if (pageCountAr < 2) {
+            $('.pagination-containerAr').addClass('hidden');
+        } else {
+            $('.pagination-containerAr').removeClass('hidden');
+        }
+
+
+        /* ARCHIVED PAGINATION END */
+
+
+    </script>
 
 {% endblock content %}

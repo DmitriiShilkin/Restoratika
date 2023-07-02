@@ -93,7 +93,7 @@ class Application(models.Model):
     number_persons = models.IntegerField(default=2, validators=[MinValueValidator(1), MaxValueValidator(999)])
     date = models.DateField()
     time = models.TimeField()
-    status = models.CharField(max_length=3, choices=STATUSES, default='NEW')
+    status = models.CharField(max_length=3, choices=STATUSES)
     comment = models.CharField(max_length=128, blank=True)
     table = models.ForeignKey(Table, on_delete=models.CASCADE, default=1)
     hall = models.ForeignKey(Hall, on_delete=models.CASCADE, default=1)

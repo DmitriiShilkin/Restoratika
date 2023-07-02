@@ -7,48 +7,51 @@
 {% endblock title %}
 
 {% block content %}
-    <h2>Блюда</h2>
+    <h2>Товары</h2>
     <hr>
 	<!--  Добавляем форму, которая объединяет набор полей, которые будут отправляться в запросе -->
-	<form action="" method="get">
-		<!-- Переменная, которую мы передали через контекст, может сгенерировать нам форму с полями -->
+	<form enctype='multipart/form-data' action="" method="get">
+		<!-- Форма для сортировки -->
+		{{ form }}
+		<input type="submit" value="Сортировать"><hr>
+		<!-- Форма для фильтрации -->
 		{{ filterset.form.as_p }}
 		<input type="submit" value="Найти" /><hr>
-		<button><a href="{% url 'dish_create' %}">Добавить новое блюдо</a></button>
+		<button><a href="{% url 'dish_create' %}">Добавить товар</a></button>
 	</form>
 
 	{% if dishes %}
 		<table cellpadding="10">
 			<tr>
-				<th>Название</th>
-				<th>Описание</th>
-				<th>Вес</th>
+				<th>Фото</th>
+				<th>Наименование</th>
 				<th>Цена</th>
-				<th>Скидка</th>
 				<th>Количество</th>
-				<th>Раздел меню</th>
+				<th>В наличии</th>
 			</tr>
 			{% for dish in dishes %}
 				<tr>
+					{% if dish.picture %}
+						<td><img src="{{ dish.picture.url }}" width="100"></td>
+					{% else %}
+						<td>Нет картинки</td>
+					{% endif %}
 					<td>{{ dish.name }}</td>
-					<td>{{ dish.description }}</td>
-					<td>{{ dish.weight }} гр.</td>
-					<td>{{ dish.price|floatformat:2 }} &#8381;</td>
-					<td>{{ dish.discount }} %</td>
+					<td>{{ dish.price_discount|floatformat:2 }} &#8381;</td>
 					<td>{{ dish.quantity }} шт.</td>
-					<td>{{ dish.menu_section }}</td>
-					<td><button><a href="{% url 'dish_detail' pk=dish.pk %}">Изменить</a></button></td>
-					<td><button><a href="{% url 'dish_delete' pk=dish.pk %}">Удалить</a></button></td>
+					<td>{{ dish.is_in_stop_list|yesno:'Нет, Да' }}</td>
 					{% if not dish.is_in_stop_list %}
 					 	<td><button><a href="{% url 'dish_addsl' pk=dish.pk %}">Добавить в стоп-лист</a></button></td>
 					{% else %}
 						<td><button><a href="{% url 'dish_delsl' pk=dish.pk %}">Удалить из стоп-листа</a></button></td>
 					{% endif %}
+					<td><button><a href="{% url 'dish_detail' pk=dish.pk %}">Изменить</a></button></td>
+					<td><button><a href="{% url 'dish_delete' pk=dish.pk %}">Удалить</a></button></td>
 				</tr>
 			{% endfor %}
 		</table>
 	{% else %}
-		<p>Блюд нет!</p>
+		<p>Товаров нет!</p>
 	{% endif %}
 	<!-- Добавляем пагинацию на страницу -->
 	<!-- Информация о предыдущих страницах -->

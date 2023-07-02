@@ -1,41 +1,597 @@
 {% extends 'default.html' %}
-
+{% load static %}
+{% load crispy_forms_tags %}
 {% block title %}
-	Application
+Application
 {% endblock title %}
-
 {% block content %}
-    <h2>Заявка на бронирование: {{ app.pk }}.<br>
-		Создана: {{ app.created_at|date:'d.m.Y H:i' }}.<br>
-		Статус: {{ app.get_status_display }}.
-	</h2>
-	<hr>
-	Дата брони: {{ app.date|date:'d.m.Y' }}<br>
-	Время брони: {{ app.time|date:'H:i' }}<br>
-	Количество гостей: {{ app.number_persons }}<br>
-	Имя клиента: {{ app.client_name }}<br>
-	Телефон: {{ app.client_phone }}<br>
-	Электронная почта: {{ app.client_email }}<br>
-	Комментарий: {{ app.comment }}<br>
-	<hr>
-    <form action="" method="post">
+
+    <div class="container-fluid pt-0 app-check-box">
+        <div class="row">
+        <div class="col-md-4">
+            <button type="button" onclick="location.href = '/booking'"; return false;" class="create-app"><img src="/static/img/leftarrow.png" alt="Стрелка"></button></div>
+        <div class="col-md-4 flex-box"><div class="date-box">
+            <span>{{ app.date|date:'d' }}</span><span style="margin-left: 4px;" id="reformMonth">{{ app.date|date:'m' }}</span>
+       </div>
+       <button style="display: none" id="next_day"><img src="/static/img/rightarrow.png" alt="Стрелка"></button>
+        </div>
+
+         <div class="col-md-4">
+             <div class="icon-box">
+<!-- Закомментировано для будущих доработок
+             <div class="icon-1 icon-frame">
+                 <img class="avatar-img" src="{% static 'img/calendar.png' %}" alt="Календарь">
+             </div>
+
+               <div class="icon-2 icon-frame">
+                   <img class="avatar-img"src="{% static 'img/search.png' %}" alt="Лупа">
+               </div>
+
+                <div class="icon-3 icon-frame">
+                    <img class="avatar-img" src="{% static 'img/gear.png' %}" alt="Шестеренка">
+                </div>-->
+         </div>
+         </div>
+    </div>
+    </div>
+<br><br>
+     <div class="container-fluid pt-0 app-check-box">
+               <div class="row center-content mb-5">
+               <div class="col-md-4"><div id="box1">Создано: {{ app.created_at|date:'d.m.Y H:i' }}</div></div>
+                 <div class="col-md-4"><div id="box2">Номер заявки: {{ app.pk }}</div></div>
+           </div>
+    <div class="row">
         {% csrf_token %}
-        {{ form.as_p }}
-		{% if app.status == 'NEW' %}
-			<button> <a href="{% url 'app_validate' pk=app.pk %}">Проверяется</a></button>
-		{% endif %}
-		<br>
-    	<br>
-		{% if app.status != 'CAN' and app.status != 'FIN' %}
-        	<button> <a href="{% url 'app_cancel' pk=app.pk %}">Отменить</a></button>
-		{% endif %}
-		{% if app.status == 'NEW' or app.status == 'VAL' %}
-			<input type="submit" value="Подтвердить"/>
-		{% endif %}
-		<hr>
-		{% if app.status != 'CAN' and app.status != 'FIN' %}
-			<button> <a href="{% url 'app_finish' pk=app.pk %}">Завершить</a></button>
-		{% endif %}
-    </form>
+        <div class="reservation-form">
+   <div class="col-md-6">
+<div id="div_id_client_name" class="form-group">
+ <label for="id_client_name" class=" requiredField">
+                Имя<span class="asteriskField">*</span>
+            </label>
+                <div>
+                            <input readonly  type="text" value="{{ app.client_name }}" name="client_name" maxlength="64" class="textinput form-control" required="" id="id_client_name">
+                </div>
+    </div>
+<div id="div_id_client_phone" class="form-group">
+<label for="id_client_phone" class=" requiredField">Телефон<span class="asteriskField">*</span>
+            </label>
+                <div>
+                            <input readonly  type="text" value="{{ app.client_phone }}" name="client_phone" maxlength="12" minlength="11" class="textinput form-control" required="" id="id_client_phone">
+                </div>
+    </div>
+
+<div id="div_id_client_email" class="form-group">
+<label for="id_client_email" class=" requiredField">
+                E-mail<span class="asteriskField">*</span></label>
+<div>
+                            <input readonly  type="email" value="{{ app.client_email }}" name="client_email" class="emailinput form-control" required="" id="id_client_email">
+</div>
+</div>
+
+<div id="div_id_comment" class="form-group">
+<label for="id_comment" class="">
+                Комментарий
+            </label>
+<div>
+<input readonly  type="text" value="{{ app.comment }}" name="comment" maxlength="128" class="textinput form-control" id="id_comment">
+</div>
+ </div>
+
+   </div>
+
+               <div class="col-md-6">
+                             <div class="guest-label">
+                Количество гостей
+            </div>
+
+     <div class="guest-box">
+                <div class="guest-line">
+
+    <div id="div_id_guest_num" class="form-group">
+   <div>
+<div class="form-check">
+        <input onclick="return false;" type="radio" class="form-check-input" name="guest_num" value="1" id="id_guest_num_0">
+        <label class="form-check-label" for="id_guest_num_0">
+            1
+        </label>
+
+     </div>
+
+      <div class="form-check">
+        <input onclick="return false;" type="radio" class="form-check-input" name="guest_num" value="2" id="id_guest_num_1">
+        <label class="form-check-label" for="id_guest_num_1">
+            2
+        </label>
+
+     </div>
+
+      <div class="form-check">
+        <input onclick="return false;" type="radio" class="form-check-input" name="guest_num" value="3" id="id_guest_num_2">
+        <label class="form-check-label" for="id_guest_num_2">
+            3
+        </label>
+
+     </div>
+
+      <div class="form-check">
+        <input onclick="return false;" type="radio" class="form-check-input" name="guest_num" value="4" id="id_guest_num_3">
+        <label class="form-check-label" for="id_guest_num_3">
+            4
+        </label>
+
+     </div>
+
+      <div class="form-check">
+        <input onclick="return false;" type="radio" class="form-check-input" name="guest_num" value="5" id="id_guest_num_4">
+        <label class="form-check-label" for="id_guest_num_4">
+            5
+        </label>
+
+     </div>
+
+      <div class="form-check">
+        <input onclick="return false;" type="radio" class="form-check-input" name="guest_num" value="6" id="id_guest_num_5">
+        <label class="form-check-label" for="id_guest_num_5">
+            6
+        </label>
+
+     </div>
+
+      <div class="form-check">
+        <input onclick="return false;" type="radio" class="form-check-input" name="guest_num" value="7" id="id_guest_num_6">
+        <label class="form-check-label" for="id_guest_num_6">
+            7
+        </label>
+
+     </div>
+
+      <div class="form-check">
+        <input onclick="return false;" type="radio" class="form-check-input" name="guest_num" value="8" id="id_guest_num_7">
+        <label class="form-check-label" for="id_guest_num_7">
+            8
+        </label>
+
+     </div>
+
+      <div class="form-check">
+        <input onclick="return false;" type="radio" class="form-check-input" name="guest_num" value="9" id="id_guest_num_8">
+        <label class="form-check-label" for="id_guest_num_8">
+            9
+        </label>
+
+     </div>
+
+      <div class="form-check">
+        <input onclick="return false;" type="radio" class="form-check-input" name="guest_num" value="10" id="id_guest_num_9">
+        <label class="form-check-label" for="id_guest_num_9">
+            10
+        </label>
+
+     </div>
+ </div>
+</div>
+</div>
+     <div class="link-arrow center-content link-arrow-back d-none"><img src="/static/img/rightarrow.png" alt="Стрелка"></div>
+        <div class="form-check-big d-none" id="div_id_guestNum">
+        <input type="radio" class="form-check-input" checked="checked" name="guestNum" value="four_g" id="bigNum" required="">
+        <label class="form-check-label" for="bigNum">
+            <span class="results">X</span>
+        </label>
+     </div>
+                <div class="guest-arrow">
+<div class="popup-fade">
+	<div class="popup">
+<div class="bigVal">
+<div id="div_id_number_persons" class="form-group">
+<div>
+<input type="number" name="number_persons" value="2" class="numberinput form-control" required="" id="id_number_persons">
+</div>
+</div>
+</div>
+</div>
+</div>
+<a class="popup-open d-none" href="#"><div class="addNum"><div class="link-arrow center-content"><img src="/static/img/rightarrow.png" alt="Стрелка"></div></div></a>
+                </div>
+</div>
+
+
+<div class="time-box">
+    <div id="div_id_hours" class="form-group">
+        <label class=" requiredField">
+                Часы<span class="asteriskField">*</span>
+            </label>
+<div>
+
+      <div class="form-check">
+        <input onclick="return false;" type="radio" class="form-check-input" name="hours" value="10" id="id_hours_0" required="">
+        <label class="form-check-label" for="id_hours_0">
+            10
+        </label>
+     </div>
+
+      <div class="form-check">
+        <input onclick="return false;" type="radio" class="form-check-input" name="hours" value="11" id="id_hours_1" required="">
+        <label class="form-check-label" for="id_hours_1">
+            11
+        </label>
+     </div>
+
+      <div class="form-check">
+        <input onclick="return false;" type="radio" class="form-check-input" name="hours" value="12" id="id_hours_2" required="">
+        <label class="form-check-label" for="id_hours_2">
+            12
+        </label>
+
+     </div>
+
+      <div class="form-check">
+        <input onclick="return false;" type="radio" class="form-check-input" name="hours" value="13" id="id_hours_3" required="">
+        <label class="form-check-label" for="id_hours_3">
+            13
+        </label>
+
+     </div>
+
+      <div class="form-check">
+        <input onclick="return false;" type="radio" class="form-check-input" name="hours" value="14" id="id_hours_4" required="">
+        <label class="form-check-label" for="id_hours_4">
+            14
+        </label>
+
+     </div>
+
+      <div class="form-check">
+        <input onclick="return false;" type="radio" class="form-check-input" name="hours" value="15" id="id_hours_5" required="">
+        <label class="form-check-label" for="id_hours_5">
+            15
+        </label>
+
+     </div>
+
+      <div class="form-check">
+        <input onclick="return false;" type="radio" class="form-check-input" name="hours" value="16" id="id_hours_6" required="">
+        <label class="form-check-label" for="id_hours_6">
+            16
+        </label>
+
+     </div>
+
+      <div class="form-check">
+        <input onclick="return false;" type="radio" class="form-check-input" name="hours" value="17" id="id_hours_7" required="">
+        <label class="form-check-label" for="id_hours_7">
+            17
+        </label>
+
+     </div>
+
+      <div class="form-check">
+        <input onclick="return false;" type="radio" class="form-check-input" name="hours" value="18" id="id_hours_8" required="">
+        <label class="form-check-label" for="id_hours_8">
+            18
+        </label>
+
+     </div>
+
+      <div class="form-check">
+        <input onclick="return false;" type="radio" class="form-check-input" name="hours" value="19" id="id_hours_9" required="">
+        <label class="form-check-label" for="id_hours_9">
+            19
+        </label>
+
+     </div>
+
+      <div class="form-check">
+        <input onclick="return false;" type="radio" class="form-check-input" name="hours" value="20" id="id_hours_10" required="">
+        <label class="form-check-label" for="id_hours_10">
+            20
+        </label>
+
+     </div>
+
+      <div class="form-check">
+        <input onclick="return false;" type="radio" class="form-check-input" name="hours" value="21" id="id_hours_11" required="">
+        <label class="form-check-label" for="id_hours_11">
+            21
+        </label>
+
+     </div>
+
+      <div class="form-check">
+        <input onclick="return false;" type="radio" class="form-check-input" name="hours" value="22" id="id_hours_12" required="">
+        <label class="form-check-label" for="id_hours_12">
+            22
+        </label>
+
+     </div>
+
+      <div class="form-check">
+        <input onclick="return false;" type="radio" class="form-check-input" name="hours" value="23" id="id_hours_13" required="">
+        <label class="form-check-label" for="id_hours_13">
+            23
+        </label>
+
+     </div>
+
+      <div class="form-check">
+        <input onclick="return false;" type="radio" class="form-check-input" name="hours" value="24" id="id_hours_14" required="">
+        <label class="form-check-label" for="id_hours_14">
+            24
+        </label>
+     </div>
+
+</div>
+    </div>
+
+    <div id="div_id_minutes" class="form-group">
+        <label class=" requiredField">
+                Минуты<span class="asteriskField">*</span>
+            </label>
+<div>
+
+<div class="form-check">
+        <input onclick="return false;" type="radio" class="form-check-input" name="minutes" value="00" id="id_minutes_0" required="">
+        <label class="form-check-label" for="id_minutes_0">
+            0
+        </label>
+     </div>
+
+      <div class="form-check">
+        <input onclick="return false;" type="radio" class="form-check-input" name="minutes" value="5" id="id_minutes_1" required="">
+        <label class="form-check-label" for="id_minutes_1">
+            5
+        </label>
+     </div>
+
+      <div class="form-check">
+        <input onclick="return false;" type="radio" class="form-check-input" name="minutes" value="10" id="id_minutes_2" required="">
+        <label class="form-check-label" for="id_minutes_2">
+            10
+        </label>
+     </div>
+
+      <div class="form-check">
+        <input onclick="return false;" type="radio" class="form-check-input" name="minutes" value="15" id="id_minutes_3" required="">
+        <label class="form-check-label" for="id_minutes_3">
+            15
+        </label>
+     </div>
+
+      <div class="form-check">
+        <input onclick="return false;" type="radio" class="form-check-input" name="minutes" value="20" id="id_minutes_4" required="">
+        <label class="form-check-label" for="id_minutes_4">
+            20
+        </label>
+
+     </div>
+
+      <div class="form-check">
+        <input onclick="return false;" type="radio" class="form-check-input" name="minutes" value="25" id="id_minutes_5" required="">
+        <label class="form-check-label" for="id_minutes_5">
+            25
+        </label>
+     </div>
+
+      <div class="form-check">
+        <input onclick="return false;" type="radio" class="form-check-input" name="minutes" value="30" id="id_minutes_6" required="">
+        <label class="form-check-label" for="id_minutes_6">
+            30
+        </label>
+     </div>
+
+      <div class="form-check">
+        <input onclick="return false;" type="radio" class="form-check-input" name="minutes" value="35" id="id_minutes_7" required="">
+        <label class="form-check-label" for="id_minutes_7">
+            35
+        </label>
+     </div>
+
+      <div class="form-check">
+        <input onclick="return false;" type="radio" class="form-check-input" name="minutes" value="40" id="id_minutes_8" required="">
+        <label class="form-check-label" for="id_minutes_8">
+            40
+        </label>
+     </div>
+
+      <div class="form-check">
+        <input onclick="return false;" type="radio" class="form-check-input" name="minutes" value="45" id="id_minutes_9" required="">
+        <label class="form-check-label" for="id_minutes_9">
+            45
+        </label>
+     </div>
+
+      <div class="form-check">
+        <input onclick="return false;" type="radio" class="form-check-input" name="minutes" value="50" id="id_minutes_10" required="">
+        <label class="form-check-label" for="id_minutes_10">
+            50
+        </label>
+     </div>
+
+    <div class="form-check">
+        <input onclick="return false;" type="radio" class="form-check-input" name="minutes" value="55" id="id_minutes_11" required="">
+        <label class="form-check-label" for="id_minutes_11">
+            55
+        </label>
+     </div>
+  </div>
+</div>
+     </div>
+
+
+<div class="btn-box">
+
+ <form action="" method="post">
+        {% csrf_token %}
+      <div class="table-btn">
+        {{ form }}
+            </div>
+            <div class="saveBtn-box">
+		<button class="d-none" id="clickFirst" onclick="location.href = '{% url 'app_validate' pk=app.pk %}'; return false;" />Проверяется</button>
+
+        <button onclick="location.href = '{% url 'app_cancel' pk=app.pk %}'" class="saveBtn cancelBtn">Отменить</button>
+		<input class="saveBtn" type="submit" value="Подтвердить"/>
+		<button class="d-none"> <a href="{% url 'app_finish' pk=app.pk %}">Завершить</a></button>
+            </div>
+</form>
+</div>
+
+
+ <script>
+//Меняем статус на 'проверяется'
+ $(document).ready(function($) {
+
+     changeStatus()
+
+ function changeStatus() {
+      if ('{{ app.status }}' === 'NEW') {
+      $('#clickFirst').click();
+
+ } else if ( window.location.href.includes('validate') ) {
+          window.location.href = '/booking/{{ app.pk }}'
+      }
+
+ }
+
+
+let month = $('#reformMonth').html();
+
+    if (month == '05') {
+        month = 'мая'
+    } else if (month == '06') {
+        month = 'июня'
+    } else if (month == '07') {
+        month = 'июля'
+    } else if (month == '08') {
+        month = 'августа'
+    } else if (month == '09') {
+        month = 'сентября'
+    } else if (month == '10') {
+        month = 'октября'
+    } else if (month == '11') {
+        month = 'ноября'
+    } else if (month == '12') {
+        month = 'декабря'
+    } else if (month == '01') {
+        month = 'января'
+    } else if (month == '02') {
+        month = 'февраля'
+    } else if (month == '03') {
+        month = 'марта'
+    } else if (month == '04') {
+        month = 'апреля'
+    }
+
+
+     $('#reformMonth').html(month);
+
+
+	$('.popup-open').click(function() {
+		$('.popup-fade').fadeIn();
+              $('.guest-line .form-check-input').prop('checked', false);
+		return false;
+	});
+
+	$('.popup-close').click(function() {
+		$(this).parents('.popup-fade').fadeOut();
+		return false;
+	});
+
+	$(document).keydown(function(e) {
+		if (e.keyCode === 27) {
+			e.stopPropagation();
+			$('.popup-fade').fadeOut();
+              $('.guest-line .form-check').addClass('d-none');
+              let res = $('.numberinput').val()
+              $('.results').html(res);
+              $('.guest-line .form-check-input').prop('checked', false);
+               $('.form-check-big .form-check-input').prop('checked', true);
+              $('.form-check-big').removeClass('d-none');
+            $('.link-arrow-back').removeClass('d-none');
+		}
+	});
+
+    $(document).keydown(function(e) {
+		if (e.keyCode === 13) {
+			e.stopPropagation();
+			$('.popup-fade').fadeOut();
+              $('.guest-line .form-check').addClass('d-none');
+              let res = $('.numberinput').val()
+              $('.results').html(res);
+              $('.guest-line .form-check-input').prop('checked', false);
+               $('.form-check-big .form-check-input').prop('checked', true);
+              $('.form-check-big').removeClass('d-none');
+            $('.link-arrow-back').removeClass('d-none');
+		}
+	});
+
+
+	$('.popup-fade').click(function(e) {
+		if ($(e.target).closest('.popup').length == 0) {
+			$(this).fadeOut();
+               $('.guest-line .form-check').addClass('d-none');
+              let res = $('.numberinput').val()
+              $('.results').html(res);
+              $('.guest-line .form-check-input').prop('checked', false);
+               $('.form-check-big .form-check-input').prop('checked', true);
+              $('.form-check-big').removeClass('d-none');
+            $('.link-arrow-back').removeClass('d-none');
+		}
+	});
+
+});
+
+$( '.link-arrow-back' ).on( "click", function() {
+ $('.guest-line .form-check').removeClass('d-none');
+ $('.form-check-big').addClass('d-none');
+ $('.form-check-big .form-check-input').prop('checked', false);
+  $('.link-arrow-back').addClass('d-none');
+} );
+
+
+
+$('#id_table').on('change', function (e) {
+if($("#id_table option:selected").text() !== "Не выбран"){
+    $('#id_table').addClass('active-select');
+ } else {
+   $('#id_table').removeClass('active-select');
+}
+});
+
+
+
+
+  $('#next_day').on('click', function () {
+      let now = $('#id_date').val();
+      now = new Date(new Date(now).setDate(new Date(now).getDate() + 1));
+    function convert(date) {
+    let d = Date.parse(date)
+    let date_obj = new Date(d)
+    return `${date_obj.getFullYear()}-${date_obj.toLocaleString("default", { month: "2-digit" })}-${date_obj.toLocaleString("default", { day: "2-digit"})}`
+}
+tomorrow = convert(now);
+$('#id_date').val(tomorrow);
+return false;
+   });
+
+
+
+
+$('#div_id_hours').find("input[value='{{ app.time|date:'H' }}']").prop('checked', true);
+$('#div_id_minutes').find("input[value='{{ app.time|date:'i' }}']").prop('checked', true);
+
+if ({{ app.number_persons }} < 11) {
+  $('#div_id_guest_num').find("input[value='{{ app.number_persons }}']").prop('checked', true);
+ } else {
+  $('#div_id_guest_num').addClass('d-none');
+  $('.form-check-big').removeClass('d-none');
+  $('.form-check-big .results').html({{ app.number_persons }});
+ }
+
+
+
+
+
+ </script>
+
+
 
 {% endblock content %}

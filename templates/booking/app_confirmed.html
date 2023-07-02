@@ -2,4 +2,13 @@
 
 {% block content %}
     <h2>Заявка {{ app.id }} от {{ app.created_at|date:'d.m.Y H:i' }} подтверждена!</h2>
+
+
+  <script>
+  $(function () {
+  setTimeout(function() {
+    window.location.replace("/booking/");
+  }, 2000);
+});
+  </script>
  {% endblock content %}

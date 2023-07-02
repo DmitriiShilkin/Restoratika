@@ -6,4 +6,11 @@
 
 {% block content %}
 <h2>Заявка на бронирование успешно отправлена.</h2>
+     <script>
+  $(function () {
+  setTimeout(function() {
+    window.location.replace("/booking/");
+  }, 2000);
+});
+  </script>
 {% endblock content %}

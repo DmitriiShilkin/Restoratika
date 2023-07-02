@@ -144,12 +144,21 @@ class ApplicationCreate(CreateView):
         if app.table.id != 1:
             app.table.save()
 
+        if self.request.POST.get('action') == 'Подтвердить':
+            app.status = 'CNF'
+            app.save()
+            # отправляем уведомление о подтверждении брони клиенту
+            # confirmed_email_notification(app.client_name, app.date, app.time, app.client_email)
+
+        if self.request.POST.get('action') == 'Отправить':
+            app.status = 'NEW'
+            app.save()
+            # уведомление о новых заявках в телеграм (чат менеджеров)
+            telegram_notification(app.pk, app.date, app.time, app.client_name, app.client_phone, app.number_persons)
+
         # создаем задачу в Райде
         # create_task(app.date, app.time, app.number_persons, app.client_name, app.client_phone, app.client_email,
         #             app.pk, app.comment, app.hall, app.table)
-
-        # уведомление о новых заявках в телеграм (чат менеджеров)
-        # telegram_notification(app.date, app.time, app.client_name, app.client_phone, app.number_persons)
 
         # сохраняем данные из формы в нашу БД
         return result

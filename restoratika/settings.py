@@ -46,8 +46,14 @@ INSTALLED_APPS = [
     'booking',
     'django_filters',
     'menu',
+    'crispy_forms',
+    'crispy_bootstrap4',
     # 'rest_framework',
 ]
+
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap4"
+
+CRISPY_TEMPLATE_PACK = "bootstrap4"
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -143,6 +149,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = 'static/'
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
@@ -162,7 +171,9 @@ RAIDA_PROCESS_ID = os.getenv('RAIDA_PROCESS_ID')
 RAIDA_NEW_STATUS_ID = os.getenv('RAIDA_NEW_STATUS_ID')
 
 TELBOT_TOKEN = os.getenv('TELBOT_TOKEN')
-CHAT_ID = os.getenv('CHAT_ID')
+USER_IDENTIFIER = os.getenv('USER_IDENTIFIER')
+PROJECT_IDENTIFIER = os.getenv('PROJECT_IDENTIFIER')
+TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 
 EMAIL_HOST = 'smtp.mail.ru'
 EMAIL_PORT = 465
