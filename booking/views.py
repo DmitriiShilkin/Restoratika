@@ -1,6 +1,5 @@
 from django.db.models import Q
-from django.shortcuts import render, get_object_or_404, redirect
-# from django.shortcuts import redirect
+from django.shortcuts import render, redirect
 # импорт стандартных дженериков-представлений из Джанго
 from django.views.generic import ListView, CreateView, UpdateView
 from django.urls import reverse_lazy
@@ -17,7 +16,7 @@ from .forms import ApplicationForm, ApplicationUpdateForm
 from .filters import ApplicationFilter
 # импорт задач по рассылке уведомлений
 from .tasks import telegram_notification
-# from .tasks import confirmed_email_notification, canceled_email_notification
+from .tasks import confirmed_email_notification, canceled_email_notification
 # импорт задач по работе с Райда
 from .tasks import create_task
 from .tasks import update_task, get_task_id, get_status_id
@@ -32,6 +31,7 @@ def get_free_tables(app):
         if not table.is_occupied(app.date, app.time):
             free_tables += table
     return free_tables
+
 
 # Представление для отображения списком всех заявок
 class ApplicationsList(ListView):
@@ -105,10 +105,10 @@ class ApplicationDetail(UpdateView):
             status_id = get_status_id(app.status)
             task_id = get_task_id(app.pk)
             # обновляем задачу в Райде
-            # update_task(app.table, status_id, task_id)
+            update_task(app.table, status_id, task_id)
 
             # отправляем уведомление о подтверждении брони клиенту
-            # confirmed_email_notification(app.client_name, app.date, app.time, app.client_email)
+            confirmed_email_notification(app.client_name, app.date, app.time, app.client_email)
 
         # сохраняем данные из формы в нашу БД
         return super().form_valid(form)
@@ -148,7 +148,7 @@ class ApplicationCreate(CreateView):
             app.status = 'CNF'
             app.save()
             # отправляем уведомление о подтверждении брони клиенту
-            # confirmed_email_notification(app.client_name, app.date, app.time, app.client_email)
+            confirmed_email_notification(app.client_name, app.date, app.time, app.client_email)
 
         if self.request.POST.get('action') == 'Отправить':
             app.status = 'NEW'
@@ -157,8 +157,8 @@ class ApplicationCreate(CreateView):
             telegram_notification(app.pk, app.date, app.time, app.client_name, app.client_phone, app.number_persons)
 
         # создаем задачу в Райде
-        # create_task(app.date, app.time, app.number_persons, app.client_name, app.client_phone, app.client_email,
-        #             app.pk, app.comment, app.hall, app.table)
+        create_task(app.date, app.time, app.number_persons, app.client_name, app.client_phone, app.client_email,
+                    app.pk, app.comment, app.hall, app.table)
 
         # сохраняем данные из формы в нашу БД
         return result
@@ -207,10 +207,10 @@ def application_cancel(request, pk):
         status_id = get_status_id(app.status)
         task_id = get_task_id(app.pk)
         # обновляем задачу в Райде
-        # update_task(app.table, status_id, task_id)
+        update_task(app.table, status_id, task_id)
 
         # отправляем уведомление об отмене брони клиенту
-        # canceled_email_notification(app.client_name, app.date, app.time, app.client_email)
+        canceled_email_notification(app.client_name, app.date, app.time, app.client_email)
 
         queryset = Application.objects.all()
         new = ApplicationFilter(request.GET, queryset.filter(status='NEW'))
@@ -240,7 +240,7 @@ def application_validate(request, pk):
         status_id = get_status_id(app.status)
         task_id = get_task_id(app.pk)
         # обновляем задачу в Райде
-        # update_task(app.table, status_id, task_id)
+        update_task(app.table, status_id, task_id)
 
     # context = {
     #     'new': new.qs,
@@ -272,7 +272,7 @@ def application_finish(request, pk):
         status_id = get_status_id(app.status)
         task_id = get_task_id(app.pk)
         # обновляем задачу в Райде
-        # update_task(app.table, status_id, task_id)
+        update_task(app.table, status_id, task_id)
 
         queryset = Application.objects.all()
         new = ApplicationFilter(request.GET, queryset.filter(status='NEW'))

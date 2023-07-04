@@ -2,8 +2,6 @@ import json
 import requests
 
 from django.conf import settings
-from django.template.loader import render_to_string
-from django.core.mail import EmailMultiAlternatives
 
 
 # отправка уведомления в telegram
@@ -29,68 +27,46 @@ def telegram_notification(booking_id, booking_date, booking_time, client_name, c
     requests.post('https://notification.skroy.ru/notification', json=data)
 
 
-# def telegram_notification(booking_date, booking_time, client_name, client_phone, num_of_person):
-#     token = settings.TELBOT_TOKEN
-#     chat_id = settings.CHAT_ID
-#     message = f"Поступила новая заявка на бронирование столика!\n" \
-#               f"Дата:  {booking_date} в {booking_time}\n" \
-#               f"Гостей: {num_of_person} чел.\n" \
-#               f"Имя: {client_name} тел. {client_phone}"
-#     print(requests.get(f"https://api.telegram.org/bot{token}/sendMessage?chat_id={chat_id}&text={message}").json())
-
-
 # Отправка уведомления на почту клиента о подтверждении брони
-def confirmed_email_notification(name, date, time, client_email):
-    # указываем какой шаблон брать за основу и преобразовываем его в строку для отправки подписчику
-    html_context = render_to_string(
-        'mail/confirmed.html',
-        {
-            'name': name,
-            'date': date,
-            'time': time
-        }
-    )
-
-    msg = EmailMultiAlternatives(
-        # тема письма
-        subject='Подтверждение брони',
-        # тело пустое, потому что мы используем шаблон
-        body='',
-        # адрес отправителя
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        # список адресатов
-        to=[client_email],
-    )
-
-    msg.attach_alternative(html_context, 'text/html')
-    msg.send(fail_silently=False)
+def confirmed_email_notification(client_name, booking_date, booking_time, client_email):
+    data = {
+        "event_code": "resto_confirm_booking",
+        "user_identifier": settings.USER_IDENTIFIER,
+        "project_identifier": settings.PROJECT_IDENTIFIER,
+        "message_recipients":
+            [
+                {
+                    "email": client_email
+                }
+            ],
+        "parameters": {
+            "c_booking_date": booking_date.strftime('%d.%m.%Y'),
+            "c_booking_time": booking_time.strftime('%H:%M'),
+            "c_client_name": client_name
+            }
+    }
+    requests.post('https://notification.skroy.ru/notification', json=data)
 
 
 # Отправка уведомления на почту клиента об отмене брони
-def canceled_email_notification(name, date, time, client_email):
-    # указываем какой шаблон брать за основу и преобразовываем его в строку для отправки подписчику
-    html_context = render_to_string(
-        'mail/canceled.html',
-        {
-            'name': name,
-            'date': date,
-            'time': time
-        }
-    )
-
-    msg = EmailMultiAlternatives(
-        # тема письма
-        subject='Отмена брони',
-        # тело пустое, потому что мы используем шаблон
-        body='',
-        # адрес отправителя
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        # список адресатов
-        to=[client_email],
-    )
-
-    msg.attach_alternative(html_context, 'text/html')
-    msg.send(fail_silently=False)
+def canceled_email_notification(client_name, booking_date, booking_time, client_email):
+    data = {
+        "event_code": "resto_cancel_booking",
+        "user_identifier": settings.USER_IDENTIFIER,
+        "project_identifier": settings.PROJECT_IDENTIFIER,
+        "message_recipients":
+            [
+                {
+                    "email": client_email
+                }
+            ],
+        "parameters": {
+            "c_booking_date": booking_date.strftime('%d.%m.%Y'),
+            "c_booking_time": booking_time.strftime('%H:%M'),
+            "c_client_name": client_name
+            }
+    }
+    requests.post('https://notification.skroy.ru/notification', json=data)
 
 
 # Создание задачи в Райде
