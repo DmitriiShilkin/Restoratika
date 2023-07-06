@@ -6,6 +6,7 @@ Application
 {% endblock title %}
 {% block content %}
 
+
     <div class="container-fluid pt-0 app-check-box">
         <div class="row">
         <div class="col-md-4">
@@ -428,7 +429,7 @@ Application
 		<button class="d-none" id="clickFirst" onclick="location.href = '{% url 'app_validate' pk=app.pk %}'; return false;" />Проверяется</button>
 
         <button onclick="location.href = '{% url 'app_cancel' pk=app.pk %}'" class="saveBtn cancelBtn">Отменить</button>
-		<input class="saveBtn" type="submit" value="Подтвердить"/>
+		<input class="saveBtn" id="approve_btn" type="submit" value="Подтвердить"/>
 		<button class="d-none"> <a href="{% url 'app_finish' pk=app.pk %}">Завершить</a></button>
             </div>
 </form>
@@ -436,9 +437,13 @@ Application
 
 
  <script>
-//Меняем статус на 'проверяется'
- $(document).ready(function($) {
+     if ('{{ app.status }}' == 'CNF') {
+    $('#approve_btn').addClass('d-none');
+    $('.cancelBtn').css("margin-right", "0");
+     }
 
+ $(document).ready(function($) {
+//Меняем статус на 'проверяется'
      changeStatus()
 
  function changeStatus() {
@@ -450,6 +455,7 @@ Application
       }
 
  }
+
 
 
 let month = $('#reformMonth').html();
