@@ -1,17 +1,15 @@
+from time import sleep
+
 from django.db.models import Q
 from django.shortcuts import render, redirect
 # импорт стандартных дженериков-представлений из Джанго
 from django.views.generic import ListView, CreateView, UpdateView
 from django.urls import reverse_lazy
 
-# импорт библиотек для работы с API, не используются
-# from rest_framework.response import Response
-# from rest_framework.views import APIView
-
 # импорт нашей модели
 from .models import Application, Table
 # импорт нашей формы
-from .forms import ApplicationForm, ApplicationUpdateForm
+from .forms import ApplicationForm, ApplicationClientForm
 # импорт нашего фильтра
 from .filters import ApplicationFilter
 # импорт задач по рассылке уведомлений
@@ -20,10 +18,9 @@ from .tasks import confirmed_email_notification, canceled_email_notification
 # импорт задач по работе с Райда
 from .tasks import create_task
 from .tasks import update_task, get_task_id, get_status_id
-# импорт сериалайзера, не используется
-# from .serializers import ApplicationSerializer
 
 
+# получение свободных столиков
 def get_free_tables(app):
     free_tables = []
     tables = Table.objects.all()
@@ -79,7 +76,7 @@ class ApplicationsList(ListView):
 # Представление для просмотра заявки, изменения её статуса и выбора столика
 class ApplicationDetail(UpdateView):
     # используемая форма
-    form_class = ApplicationUpdateForm
+    form_class = ApplicationForm
     # используемая модель
     model = Application
     # имя шаблона, в соответствии с которым информация будет отображаться на странице
@@ -91,24 +88,27 @@ class ApplicationDetail(UpdateView):
     def form_valid(self, form):
         # получаем данные из формы до сохранения
         app = form.save(commit=False)
-
         # присваиваем статус "Подтверждена"
-        if app.status not in ['CNF', 'CAN', 'FIN']:
-            app.status = 'CNF'
+        if app.status not in ['CAN', 'FIN']:
+            if app.status != 'CNF':
+                # отправляем уведомление о подтверждении брони клиенту
+                confirmed_email_notification(app.client_name, app.date, app.time, app.client_email)
+                app.status = 'CNF'
 
-            # Если столик выбран, то занимаем его
-            if app.table.id != 1:
-                app.table.set_occupied(app.date, app.time)
-                app.table.save()
+            old_app = Application.objects.get(id=app.pk)
+            # Если данные заявки изменяются, освобождаем стол
+            if not (app.table == old_app.table and app.date == old_app.date and app.time == old_app.time):
+                old_app.table.free_occupied(old_app.date, old_app.time)
+
+                # Если столик выбран, то занимаем его
+                if app.table.id != 1:
+                    app.table.set_occupied(app.date, app.time)
 
             # получаем id статуса и задачи из Райды
             status_id = get_status_id(app.status)
             task_id = get_task_id(app.pk)
             # обновляем задачу в Райде
             update_task(app.table, status_id, task_id)
-
-            # отправляем уведомление о подтверждении брони клиенту
-            confirmed_email_notification(app.client_name, app.date, app.time, app.client_email)
 
         # сохраняем данные из формы в нашу БД
         return super().form_valid(form)
@@ -123,7 +123,7 @@ class ApplicationDetail(UpdateView):
         return context
 
 
-# Представление для ввода данных в форму
+# Представление для создания заявки менеджером
 class ApplicationCreate(CreateView):
     # используемая форма
     form_class = ApplicationForm
@@ -140,21 +140,17 @@ class ApplicationCreate(CreateView):
         # вызываем метод super, для сохранения данных из формы в БД и чтобы у заявки появился pk
         result = super().form_valid(form)
 
-        # если выбран столик, то сохраняем его
+        # присваиваем статус "Подтверждена"
+        app.status = 'CNF'
+
+        # Если столик выбран, то занимаем его
         if app.table.id != 1:
-            app.table.save()
+            app.table.set_occupied(app.date, app.time)
 
-        if self.request.POST.get('action') == 'Подтвердить':
-            app.status = 'CNF'
-            app.save()
-            # отправляем уведомление о подтверждении брони клиенту
-            confirmed_email_notification(app.client_name, app.date, app.time, app.client_email)
+        app.save()
 
-        if self.request.POST.get('action') == 'Отправить':
-            app.status = 'NEW'
-            app.save()
-            # уведомление о новых заявках в телеграм (чат менеджеров)
-            telegram_notification(app.pk, app.date, app.time, app.client_name, app.client_phone, app.number_persons)
+        # отправляем уведомление о подтверждении брони клиенту
+        confirmed_email_notification(app.client_name, app.date, app.time, app.client_email)
 
         # создаем задачу в Райде
         create_task(app.date, app.time, app.number_persons, app.client_name, app.client_phone, app.client_email,
@@ -171,6 +167,37 @@ class ApplicationCreate(CreateView):
         context['new'] = new.qs
 
         return context
+
+
+# Представление для создания заявки клиентом
+class ApplicationCreateClient(CreateView):
+    # используемая форма
+    form_class = ApplicationClientForm
+    # используемая модель
+    model = Application
+    # имя шаблона, в соответствии с которым информация будет отображаться на странице
+    template_name = 'booking/app_create_client.html'
+    success_url = reverse_lazy('app_success')
+
+    # метод валидации данных в форме
+    def form_valid(self, form):
+        # получаем данные из формы до сохранения
+        app = form.save(commit=False)
+        # вызываем метод super, для сохранения данных из формы в БД и чтобы у заявки появился pk
+        result = super().form_valid(form)
+
+        app.status = 'NEW'
+        app.save()
+
+        # уведомление о новых заявках в телеграм (чат менеджеров)
+        telegram_notification(app.pk, app.date, app.time, app.client_name, app.client_phone, app.number_persons)
+
+        # создаем задачу в Райде
+        create_task(app.date, app.time, app.number_persons, app.client_name, app.client_phone, app.client_email,
+                    app.pk, app.comment, app.hall, app.table)
+
+        # сохраняем данные из формы в нашу БД
+        return result
 
 
 # Представление-заглушка для стартовой страницы
@@ -198,7 +225,6 @@ def application_cancel(request, pk):
         # Если столик занят, то освобождаем его
         if app.table.id != 1:
             app.table.free_occupied(app.date, app.time)
-            app.table.save()
 
         # сохраняем изменения в заявке
         app.save()
@@ -242,12 +268,6 @@ def application_validate(request, pk):
         # обновляем задачу в Райде
         update_task(app.table, status_id, task_id)
 
-    # context = {
-    #     'new': new.qs,
-    #     'app': app
-    # }
-
-    # return render(request, 'booking/app.html', context)
     return redirect('app_detail', pk=app.id)
 
 
@@ -263,7 +283,6 @@ def application_finish(request, pk):
         # Если столик занят, то освобождаем его
         if app.table.number != 1:
             app.table.free_occupied(app.date, app.time)
-            app.table.save()
 
         # сохраняем изменения в заявке
         app.save()
@@ -284,59 +303,3 @@ def application_finish(request, pk):
         return render(request, 'booking/app_finished.html', context)
 
     return redirect('app_detail', pk=app.id)
-
-
-# Представление для отображения новых заявок
-class ApplicationsNewList(ApplicationsList):
-
-    def get_queryset(self):
-        # Получаем обычный запрос
-        queryset = super().get_queryset()
-        # Используем наш класс фильтрации.
-        # Сохраняем нашу фильтрацию в объекте класса,
-        # чтобы потом добавить в контекст и использовать в шаблоне.
-        self.filterset = ApplicationFilter(self.request.GET, queryset.filter(status='NEW'))
-        # Возвращаем из функции отфильтрованный список заявок
-        return self.filterset.qs
-
-
-# Представление для отображения подтвержденных заявок
-class ApplicationsConfirmedList(ApplicationsList):
-
-    def get_queryset(self):
-        # Получаем обычный запрос
-        queryset = super().get_queryset()
-        # Используем наш класс фильтрации.
-        # Сохраняем нашу фильтрацию в объекте класса,
-        # чтобы потом добавить в контекст и использовать в шаблоне.
-        self.filterset = ApplicationFilter(self.request.GET, queryset.filter(status='CNF'))
-        # Возвращаем из функции отфильтрованный список заявок
-        return self.filterset.qs
-
-
-# Представление для отображения архивных заявок
-class ApplicationsArchiveList(ApplicationsList):
-
-    def get_queryset(self):
-        # Получаем обычный запрос
-        queryset = super().get_queryset()
-        # Используем наш класс фильтрации.
-        # Сохраняем нашу фильтрацию в объекте класса,
-        # чтобы потом добавить в контекст и использовать в шаблоне.
-        self.filterset = ApplicationFilter(self.request.GET, queryset.filter(Q(status='CAN') | Q(status='FIN')))
-        # Возвращаем из функции отфильтрованный список заявок
-        return self.filterset.qs
-
-
-# Представление для сериализации данных из таблицы Application. Не используется
-# class GetApplicationInfo(APIView):
-#
-#     def get(self, request):
-#         # Получаем набор всех записей из таблицы Application
-#         queryset = Application.objects.all()
-#         # Сериализуем извлечённый набор записей
-#         serializer_for_queryset = ApplicationSerializer(
-#             instance=queryset, # Передаём набор записей
-#             many=True # Указываем, что на вход подаётся именно набор записей
-#         )
-#         return Response(serializer_for_queryset.data)

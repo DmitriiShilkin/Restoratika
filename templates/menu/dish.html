@@ -3,16 +3,131 @@
 {% block title %}
 	Dish
 {% endblock title %}
+{% load crispy_forms_tags %}
+
 
 {% block content %}
-    <h2>Изменение товара<br>
-	</h2>
-	<hr>
-    <form enctype="multipart/form-data" action="" method="post">
-        {% csrf_token %}
-        <p>Наценка: {{ dish.margin }}%</p>
-        {{ form.as_p }}
-        <p><input type="submit" value="Сохранить"></p>
+
+       <h1>Изменить товар</h1>
+        <div class="container-fluid">
+    <form class="dish_form" enctype="multipart/form-data" action="" method="post">
+       {% csrf_token %}
+    <div class="row center-content">
+        <div class="col-4">
+        <div class="row pb-2">
+            <div class="col">
+                  {{ form.name|as_crispy_field }}
+            </div>
+        </div>
+            <div class="row">
+
+                <div class="col-3 center-content">
+                  <img class="upload_img" src="/static/img/upload.png">
+                          	{% if dish.picture %}
+                         <input class="upload_hide" type="file" name="picture" accept="image/*" class="clearablefileinput form-control-file" id="id_picture">
+
+                                <img src="{{ dish.picture.url }}" width="90px">
+
+					{% else %}
+                    <input class="upload_hide" type="file" name="picture" accept="image/*" class="clearablefileinput form-control-file" id="id_picture">
+                                <p style="text-align: center">Нет картинки</p>
+					{% endif %}
+                </div>
+                <div class="col-9">
+                    <div class="row">
+                        <div class="col">
+                                {{ form.price|as_crispy_field }}
+                        </div>
+                            <div class="col">
+                    <div id="div_id_nacenka" class="form-group"><label for="id_nacenka" class="requiredField">Наценка</label><div>
+<input readonly type="text" name="nacenka" value="{{ dish.margin }}%" step="any" class="numberinput form-control" required="" id="id_nacenka"></div>
+</div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                                    {{ form.cost|as_crispy_field }}
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+        <div class="row">
+            <div class="col">
+                    {{ form.description|as_crispy_field }}
+            </div>
+        </div>
+
+
+
+
+        <div class="row">
+            <div class="col-6">
+           {{ form.quantity|as_crispy_field }}
+            </div>
+                <div class="col-6">
+            {{ form.discount|as_crispy_field }}
+            </div>
+        </div>
+
+
+        <div class="row">
+            <div class="col-6">
+           {{ form.store|as_crispy_field }}
+            </div>
+                <div class="col-6">
+            {{ form.menu_section|as_crispy_field }}
+            </div>
+        </div>
+
+
+     <div class="row">
+            <div class="col">
+    {{ form.sticker|as_crispy_field }}
+            </div>
+        </div>
+
+        <div class="row pt-4 common-font" style="text-align: left; font-size: 16px; font-weight: 400;">
+            <div class="col">
+               Показывать эту позицию:
+            </div>
+        </div>
+
+       <div class="row pt-2">
+            <div class="col normal_labels">
+          {{ form.is_in_POS|as_crispy_field }}
+              {{ form.is_in_delivery|as_crispy_field }}
+            </div>
+        </div>
+
+        <div class="row pt-5">
+            <div class="col save_block">
+           <button onclick="location.href = '/dishes'" class="saveBtn cancelBtn">Отменить</button>
+                <input class="saveBtn" type="submit" value="Сохранить">
+            </div>
+        </div>
+
+
+
+            </div>
+        </div>
     </form>
+
+        </div>
+
+    <script>
+		function limit_input(length, id) {
+			var field = document.getElementById(id);
+			var max_length = length;
+			if (field.value.length > max_length) {
+				field.value = field.value.slice(0, max_length);
+			}
+		}
+	</script>
+
+
 
 {% endblock content %}

@@ -12,7 +12,7 @@ def telegram_notification(booking_id, booking_date, booking_time, client_name, c
         "project_identifier": settings.PROJECT_IDENTIFIER,
         "message_recipients": [
             {
-                "telegram_chat_id": -900195133
+                "telegram_chat_id": -1001917100200
             }
         ],
         "parameters": {

@@ -6,69 +6,156 @@
 	Dishes
 {% endblock title %}
 
-{% block content %}
-    <h2>Товары</h2>
-    <hr>
-	<!--  Добавляем форму, которая объединяет набор полей, которые будут отправляться в запросе -->
-	<form enctype='multipart/form-data' action="" method="get">
-		<!-- Форма для сортировки -->
-		{{ form }}
-		<input type="submit" value="Сортировать"><hr>
-		<!-- Форма для фильтрации -->
-		{{ filterset.form.as_p }}
-		<input type="submit" value="Найти" /><hr>
-		<button><a href="{% url 'dish_create' %}">Добавить товар</a></button>
-	</form>
+{% load crispy_forms_tags %}
 
+{% block content %}
+    <div class="container-fluid pb-5">
+    <div class="row pb-5">
+    <div class="col">
+  	<button class="create-app"  onclick="window.location.href='{% url 'dish_create' %}';">Добавить</button>
+    </div>
+    </div>
+
+    	<form class="filters-form" enctype='multipart/form-data' action="" method="get">
+    <div class="row pb-5">
+
+	<!--  Добавляем форму, которая объединяет набор полей, которые будут отправляться в запросе -->
+
+        <div class="col" style="display: flex;">
+             <div class="col-3 me-2">
+                   {{ filterset.form.store|as_crispy_field }}
+             </div>
+             <div class="col-3">
+                 {{ filterset.form.menu_section|as_crispy_field }}
+             </div>
+            		<!-- Форма для фильтрации -->
+
+        </div>
+
+
+
+
+            <div class="col" style="display: flex;justify-content: flex-end;">
+         <div class="col-4 me-2">
+            		<!-- Форма для сортировки -->
+		{{ form.ordering|as_crispy_field }}
+		<input class="d-none" id="filter_sub" type="submit" value="Сортировать">
+         </div>
+
+                <div class="col-4">
+		{{ filterset.form.name|as_crispy_field }}
+		<input class="d-none" id="form_sub" type="submit" value="Найти" />
+                </div>
+        </div>
+
+
+</div>
+	</form>
 	{% if dishes %}
-		<table cellpadding="10">
-			<tr>
-				<th>Фото</th>
-				<th>Наименование</th>
-				<th>Цена</th>
-				<th>Количество</th>
-				<th>В наличии</th>
-			</tr>
-			{% for dish in dishes %}
-				<tr>
-					{% if dish.picture %}
-						<td><img src="{{ dish.picture.url }}" width="100"></td>
+
+        <div class="row common-font mb-4" style="font-size: 16px !important;">
+        <div class="col-1">Фото</div>
+         <div class="col-5" style="text-align: left">Наименование</div>
+         <div class="col">Цена</div>
+         <div class="col">Количество</div>
+         <div class="col">В наличии</div>
+         <div class="col">Удалить</div>
+        </div>
+
+	{% for dish in dishes %}
+        <div class="row catalog-row style="font-size: 16px !important;"">
+                <div class="col-1 center-content" style="text-align: center">
+       	{% if dish.picture %}
+						<img src="{{ dish.picture.url }}" width="54px">
 					{% else %}
-						<td>Нет картинки</td>
+					Нет картинки
 					{% endif %}
-					<td>{{ dish.name }}</td>
-					<td>{{ dish.price_discount|floatformat:2 }} &#8381;</td>
-					<td>{{ dish.quantity }} шт.</td>
-					<td>{{ dish.is_in_stop_list|yesno:'Нет, Да' }}</td>
-					{% if not dish.is_in_stop_list %}
-					 	<td><button><a href="{% url 'dish_addsl' pk=dish.pk %}">Добавить в стоп-лист</a></button></td>
+                </div>
+            <div class="col-5 center-content" style="justify-content: flex-start"><a href="{% url 'dish_detail' pk=dish.pk %}">{{ dish.name }}</a></div>
+                 <div class="col center-content">{{ dish.price_discount|floatformat:2 }} &#8381;</div>
+                 <div class="col center-content">{{ dish.quantity }} шт.</div>
+                 <div class="col center-content">{% if not dish.is_in_stop_list %}
+					<a class="toggle-link" href="{% url 'dish_addsl' pk=dish.pk %}">
+
+                     <div class="toggleWrapper">
+  <input type="checkbox" name="toggle1" class="mobileToggle" id="toggle1" checked>
+  <label for="toggle1"></label>
+</div>
+                    </a>
 					{% else %}
-						<td><button><a href="{% url 'dish_delsl' pk=dish.pk %}">Удалить из стоп-листа</a></button></td>
-					{% endif %}
-					<td><button><a href="{% url 'dish_detail' pk=dish.pk %}">Изменить</a></button></td>
-					<td><button><a href="{% url 'dish_delete' pk=dish.pk %}">Удалить</a></button></td>
-				</tr>
-			{% endfor %}
-		</table>
+
+					<a class="toggle-link" href="{% url 'dish_delsl' pk=dish.pk %}">
+
+                     <div class="toggleWrapper">
+  <input type="checkbox" name="toggle2" class="mobileToggle" id="toggle2">
+  <label for="toggle2"></label>
+</div></a>
+
+					{% endif %}</div>
+                 <div class="col center-content"><a href="{% url 'dish_delete' pk=dish.pk %}"><img src="/static/img/delete.png" width="48px"></a></div>
+        </div>
+	{% endfor %}
+
+
+
 	{% else %}
 		<p>Товаров нет!</p>
 	{% endif %}
 	<!-- Добавляем пагинацию на страницу -->
 	<!-- Информация о предыдущих страницах -->
+    <div class="pagination-box mt-5">
 	{% if paginator.num_pages != 1 %}
 		{% if page_obj.has_previous %}
-			<a href="?{% url_replace page=1 %}">&laquo;Первая</a>
-			...
-			<a href="?{% url_replace page=page_obj.previous_page_number %}">{{ page_obj.previous_page_number }}</a>
+            <button class="pagination-button disabled" id="prev-button" aria-label="Previous page" title="Previous page" disabled="true">
+                           	<a href="?{% url_replace page=1 %}"><img src="/static/img/leftarrow_black.png" alt="Стрелка"></a>
+                        </button>
+
+
+
+            <a href="?{% url_replace page=page_obj.previous_page_number %}"><button class="pagination-number" page-index="2" aria-label="Page 2">{{ page_obj.previous_page_number }}</button></a>
 		{% endif %}
 		<!-- Информация о текущей странице -->
-		|{{ page_obj.number }}|
+		 <button class="pagination-number active">{{ page_obj.number }}</button>
 		<!-- Информация о следующих страницах -->
 		{% if page_obj.has_next %}
-			<a href="?{% url_replace page=page_obj.next_page_number %}">{{ page_obj.next_page_number }}</a>
-			...
-			<a href="?{% url_replace page=page_obj.paginator.num_pages %}">Последняя&raquo;</a>
+            <a href="?{% url_replace page=page_obj.next_page_number %}"><button class="pagination-number">{{ page_obj.next_page_number }}</button></a>
+
+
+            <button class="pagination-button" id="next-button" aria-label="Next page" title="Next page">
+                <a href="?{% url_replace page=page_obj.paginator.num_pages %}"><img src="/static/img/rightarrow.png" alt="Стрелка"></a>
+                        </button>
+
 		{% endif %}
 	{% endif %}
+</div>
+  <script>
+  $("#id_store").on("change",function() {
+    $("#form_sub").click();
+});
+   $("#id_menu_section").on("change",function() {
+    $("#form_sub").click();
+});
+     $("#id_ordering").on("change",function() {
+    $("#filter_sub").click();
+});
+     $("#id_name").on("change",function() {
+    $("#form_sub").click();
+});
+
+function limit_input(id) {
+			var field = document.getElementById(id);
+			var max_length = 7;
+			if (field.value.length > max_length) {
+				field.value = field.value.slice(0, max_length);
+			}
+		}
+
+
+  </script>
+
+
+
 
 {% endblock content %}
+
+</div>

@@ -15,9 +15,9 @@
         <link href="{% static 'css/styles.css' %}" rel="stylesheet" />
         <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
-
     </head>
      <body class="sb-nav-fixed">
+
 
         <nav class="sb-topnav navbar navbar-expand navbar-dark bg-blue-resto">
             <!-- Navbar Brand-->
@@ -46,7 +46,7 @@
 
         </nav>
                      <div class="user-box"><a class="nav-link" href="/"><div class="sb-nav-link-icon"><img class="avatar-img" width="68px" src="{% static 'img/avatar.png' %}" alt="Аватар">
-                                      <span class="user-name">Анастасия Смирнова</span></div></a></div>
+                                      <span class="user-name">Администратор</span></div></a></div>
 
         <div id="layoutSidenav">
             <div id="layoutSidenav_nav">
@@ -56,10 +56,10 @@
 
                         <div class="nav">
 
-                                <a class="nav-link" href="#">
-                                <div class="sb-nav-link-icon"><i class="fas fa-chart-area"></i></div>
-                               Схема зала
-                            </a>
+{#                                <a class="nav-link" href="#">#}
+{#                                <div class="sb-nav-link-icon"><i class="fas fa-chart-area"></i></div>#}
+{#                               Схема зала#}
+{#                            </a>#}
 
                             <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseLayouts" aria-expanded="false" aria-controls="collapseLayouts">
                                       <div class="redDot"></div>
@@ -67,30 +67,46 @@
                                Заявки
                                 <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
                             </a>
+
                             <div class="collapse" id="collapseLayouts" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordion">
                                 <nav class="sb-sidenav-menu-nested nav">
                                     <div class="newNum center-content"><div class="numText">{{ new_val|length }}</div></div>
-                                 <a class="nav-link" href="/booking/">Бронирование</a>
-                                   <a class="nav-link" href="/booking/">Заказы</a>
+                                 <a class="nav-link direct-link" href="/booking/">Бронирование</a>
+
                                 </nav>
                             </div>
 
-                            <a class="nav-link" href="#">
+                             <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseLayouts2" aria-expanded="false" aria-controls="collapseLayouts">
+                                <div class="sb-nav-link-icon"><i class="fas fa-columns"></i></div>
+                            Меню
+                                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                            </a>
+
+                            <div class="collapse" id="collapseLayouts2" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordion">
+                                <nav class="sb-sidenav-menu-nested nav">
+                                   <a class="nav-link direct-link" href="/dishes/">Каталог</a>
+                                            <a class="nav-link direct-link" href="/menu/">Категории</a>
+                                </nav>
+                            </div>
+
+
+
+                            <a class="nav-link direct-link" href="/booking/createcl/">
                                 <div class="sb-nav-link-icon"><i class="fas fa-chart-area"></i></div>
-                                Система лояльности
+                                Форма заявки Клиента (для тестов)
                             </a>
-                            <a class="nav-link" href="#">
-                                <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
-                               Чеки
-                            </a>
-                                <a class="nav-link" href="#">
-                                <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
-                               Отчеты
-                            </a>
-                                <a class="nav-link" href="#">
-                                <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
-                               График
-                            </a>
+{#                            <a class="nav-link" href="#">#}
+{#                                <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>#}
+{#                               Чеки#}
+{#                            </a>#}
+{#                                <a class="nav-link" href="#">#}
+{#                                <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>#}
+{#                               Отчеты#}
+{#                            </a>#}
+{#                                <a class="nav-link" href="#">#}
+{#                                <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>#}
+{#                               График#}
+{#                            </a>#}
                         </div>
                     </div>
                     <!--
@@ -144,6 +160,23 @@
         $('.newNum').removeClass('d-none');
          $('.redDot').removeClass('d-none');
     }
+
+document.querySelectorAll('.direct-link').forEach(function (item) {
+    if (item.innerText == localStorage.activeMenu) {
+        $(item).addClass('active-link');
+        $(item).closest('.collapse').addClass('show');
+    }
+});
+
+$(function() {
+  $(".direct-link").click(function(e) {
+       let activeMenu = ($(e.target).text());
+       localStorage.setItem('activeMenu', activeMenu);
+       console.log(localStorage);
+   });
+});
+
+
 </script>
 
     </body>

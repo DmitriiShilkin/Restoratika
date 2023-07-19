@@ -61,15 +61,17 @@ class DishListView(ListView):
         queryset = super().get_queryset()
 
         # Применяем выбранную сортировку
-        self.form = DishSortForm(self.request.GET)
-        if self.form.is_valid():
-            if self.form.cleaned_data['ordering']:
-                queryset = queryset.order_by(self.form.cleaned_data['ordering'])
+        self.sortform = DishSortForm(self.request.GET)
+        if self.sortform.is_valid():
+            if self.sortform.cleaned_data['ordering']:
+                queryset = queryset.order_by(self.sortform.cleaned_data['ordering'])
 
         # Используем наш класс фильтрации.
         # Сохраняем нашу фильтрацию в объекте класса,
         # чтобы потом добавить в контекст и использовать в шаблоне.
         self.filterset = DishFilter(self.request.GET, queryset)
+        self.in_stock = DishFilter(self.request.GET, queryset.filter(is_in_stop_list='False'))
+        self.stop_list = DishFilter(self.request.GET, queryset.filter(is_in_stop_list='True'))
         # Возвращаем из функции отфильтрованный список товаров
         return self.filterset.qs
 
@@ -77,8 +79,28 @@ class DishListView(ListView):
         context = super().get_context_data(**kwargs)
         # Добавляем в контекст объект фильтрации.
         context['filterset'] = self.filterset
-        context['form'] = self.form
+        context['sortform'] = self.sortform
+        context['in_stock'] = self.in_stock.qs
+        context['stop_list'] = self.stop_list.qs
+
         return context
+
+    # изменение цены у товара в представлении списком
+    def post(self, request, *args, **kwargs):
+        # если пост-запрос не пустой
+        if request.POST:
+            # получаем последний элемент из QueryDict
+            for element in request.POST.items():
+                d = element
+            # находим товар в БД с названием из запроса
+            dish = Dish.objects.get(pk=d[0])
+            new_price = float(d[1])
+            if dish.price != new_price:
+                # устанавливаем новую цену
+                dish.price = abs(new_price)
+                dish.save()
+
+        return redirect('/dishes')
 
 
 # Представление для просмотра и редактирования товара

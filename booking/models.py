@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 from django.urls import reverse
 # импорт стандартных моделей
 from django.db import models
+
+from django.db import transaction
 # импорт валидаторов
 from django.core.validators import MinValueValidator, MaxValueValidator, EmailValidator
 
@@ -16,6 +18,11 @@ STATUSES = [
     ('CAN', 'Отменена'),
     ('FIN', 'Завершена'),
 ]
+
+# параметр, который определяет интервал (в минутах), когда стол не может быть забронирован -/+ относительно
+# действующей брони. Например, стол забронирован на 15:00, тогда интервал будет (13:30...16:30), крайние значения в
+# в интервал не входят
+INTERVAL = 90
 
 
 # Модель для связи приложения с таблицей Hall базы данных
@@ -41,10 +48,14 @@ class Table(models.Model):
     # занимаем столик на указанную дату-время и преобразуем список в строку для записи в БД
     def set_occupied(self, date, time):
         dt = str(datetime.combine(date, time))
-        occupied_list = json.loads(self.occupied)
+        # читаем новое (не кэшированное) значение из БД
+        table = Table.objects.get(id=self.pk)
+        occupied = table.occupied
+        occupied_list = json.loads(occupied)
         if dt not in occupied_list:
             occupied_list.append(dt)
             self.occupied = json.dumps(occupied_list)
+            self.save()
 
     # преобразуем строку из БД в список, освобождаем столик, делаем обратное преобразование
     def free_occupied(self, date, time):
@@ -53,13 +64,14 @@ class Table(models.Model):
         if dt in occupied_list:
             occupied_list.remove(dt)
             self.occupied = json.dumps(occupied_list)
+            self.save()
 
     # преобразуем строку из БД в список и проверяем занят ли стол на указанную дату-время
     def is_occupied(self, date, time):
         dt = datetime.combine(date, time)
         occupied_list = json.loads(self.occupied)
-        minutes = -115
-        while minutes < 120:
+        minutes = -(INTERVAL - 5)
+        while minutes < INTERVAL:
             new_dt = dt + timedelta(minutes=minutes)
             minutes += 5
             if str(new_dt) in occupied_list:
@@ -69,21 +81,6 @@ class Table(models.Model):
     # указываем, как будет отображаться номер на странице
     def __str__(self):
         return self.number
-
-
-# Модель для связи приложения с таблицей Client базы данных, пока не используется
-# class Client(models.Model):
-#     # поля таблицы, переопределяем тип поля id
-#     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-#     name = models.CharField(max_length=64)
-#     phone = models.CharField(max_length=12)
-#     email = models.CharField(max_length=32, validators=[EmailValidator])
-#     telegram = models.CharField(max_length=32, blank=True)
-#     whatsup = models.CharField(max_length=12, blank=True)
-#
-#     # указываем, как будет отображаться имя на странице
-#     def __str__(self):
-#         return self.name.title()
 
 
 # Модель для связи приложения с таблицей Application базы данных
@@ -98,7 +95,7 @@ class Application(models.Model):
     table = models.ForeignKey(Table, on_delete=models.CASCADE, default=1)
     hall = models.ForeignKey(Hall, on_delete=models.CASCADE, default=1)
     client_name = models.CharField(max_length=64)
-    client_phone = models.CharField(max_length=12)
+    client_phone = models.CharField(max_length=17)
     client_email = models.EmailField(max_length=32, validators=[EmailValidator])
 
     # функция reverse позволяет нам указывать не путь вида /booking/…, а название пути, которое мы задали

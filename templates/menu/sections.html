@@ -5,51 +5,84 @@
 {% block title %}
 	Menu Sections
 {% endblock title %}
+{% load crispy_forms_tags %}
 
 {% block content %}
-    <h2>Категории</h2>
-    <hr>
-	<!--  Добавляем форму, которая объединяет набор полей, которые будут отправляться в запросе -->
+
+
+         <div class="container-fluid menu-common-font col-5">
+         <div class="row">
+         <div class="col">
+
+             	<!--  Добавляем форму, которая объединяет набор полей, которые будут отправляться в запросе -->
 	<form action="" method="get">
 		<!-- Переменная, которую мы передали через контекст, может сгенерировать нам форму с полями -->
 		{{ filterset.form.as_p }}
-		<button><a href="{% url 'section_create' %}">Добавить категорию</a></button>
+		<a href="{% url 'section_create' %}"><img src="/static/img/addsection.png" class="add_section_btn"></a>
 	</form>
 
+         </div>
+         </div>
+
+
+
 	{% if sections %}
-		<table cellpadding="10">
-			<tr>
-				<th>Название</th>
-				<th>Описание</th>
-			</tr>
+
+        <div class="row pt-3 pb-3">
+
+		<div class="col-3">Название</div>
+            <div class="col-5">Описание</div>
+           </div>
+
 			{% for section in sections %}
-				<tr>
-					<td>{{ section.name }}</td>
-					<td>{{ section.description }}</td>
-					<td><button><a href="{% url 'section_detail' pk=section.pk %}">Изменить</a></button></td>
-					<td><button><a href="{% url 'section_delete' pk=section.pk %}">Удалить</a></button></td>
-				</tr>
+                <div class="row shady-row pt-1 pb-1">
+
+					<div class="col-3 align-content-center flex-box flex-wrap">{{ section.name }}</div>
+					<div class="col-5 align-content-center flex-box flex-wrap">{{ section.description }}</div>
+					<div class="col-2 align-content-center flex-box flex-wrap"><a href="{% url 'section_detail' pk=section.pk %}"><img width="34px" src="/static/img/editicon.png"></a></div>
+					<div class="col-2 align-content-center flex-box flex-wrap"><a href="{% url 'section_delete' pk=section.pk %}"><img width="48px" src="/static/img/delete.png"></a></div>
+
+                </div>
 			{% endfor %}
-		</table>
+
+
+
+
 	{% else %}
 		<p>Категорий нет!</p>
 	{% endif %}
+
+
+
 	<!-- Добавляем пагинацию на страницу -->
 	<!-- Информация о предыдущих страницах -->
+ <div class="pagination-box mt-5">
 	{% if paginator.num_pages != 1 %}
 		{% if page_obj.has_previous %}
-			<a href="?{% url_replace page=1 %}">&laquo;Первая</a>
-			...
-			<a href="?{% url_replace page=page_obj.previous_page_number %}">{{ page_obj.previous_page_number }}</a>
+            <button class="pagination-button disabled" id="prev-button" aria-label="Previous page" title="Previous page" disabled="true">
+                           	<a href="?{% url_replace page=1 %}"><img src="/static/img/leftarrow_black.png" alt="Стрелка"></a>
+                        </button>
+
+
+
+            <a href="?{% url_replace page=page_obj.previous_page_number %}"><button class="pagination-number" page-index="2" aria-label="Page 2">{{ page_obj.previous_page_number }}</button></a>
 		{% endif %}
 		<!-- Информация о текущей странице -->
-		|{{ page_obj.number }}|
+		 <button class="pagination-number active">{{ page_obj.number }}</button>
 		<!-- Информация о следующих страницах -->
 		{% if page_obj.has_next %}
-			<a href="?{% url_replace page=page_obj.next_page_number %}">{{ page_obj.next_page_number }}</a>
-			...
-			<a href="?{% url_replace page=page_obj.paginator.num_pages %}">Последняя&raquo;</a>
+            <a href="?{% url_replace page=page_obj.next_page_number %}"><button class="pagination-number">{{ page_obj.next_page_number }}</button></a>
+
+
+            <button class="pagination-button" id="next-button" aria-label="Next page" title="Next page">
+                <a href="?{% url_replace page=page_obj.paginator.num_pages %}"><img src="/static/img/rightarrow.png" alt="Стрелка"></a>
+                        </button>
+
 		{% endif %}
 	{% endif %}
+</div>
+
+
+         </div>
 
 {% endblock content %}

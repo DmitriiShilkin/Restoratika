@@ -24,9 +24,9 @@ STATUSES = [
 ]
 
 STICKERS = [
-    ('NEW', 'New'),
-    ('SAL', 'Sale'),
-    ('TOP', 'Top'),
+    ('NEW', 'Новинка'),
+    ('SAL', 'Скидка'),
+    ('TOP', 'Топ продаж'),
     ('ETY', 'Без отметки'),
 ]
 
@@ -93,8 +93,14 @@ class Dish(models.Model):
     cost = models.FloatField(validators=[MinValueValidator(0.0)])
     # наценка
     margin = models.FloatField(validators=[MinValueValidator(0.0)], editable=False)
-    # скидка
+    # скидка в процентах
     discount = models.FloatField(default=0.0, validators=[MinValueValidator(0.0)])
+    # скидка в рублях
+    discount_rub = models.FloatField(default=0.0, validators=[MinValueValidator(0.0)])
+    # надбавка в процентах
+    increment = models.FloatField(default=0.0, validators=[MinValueValidator(0.0)])
+    # надбавка в рублях
+    increment_rub = models.FloatField(default=0.0, validators=[MinValueValidator(0.0)])
     # наклейка
     sticker = models.CharField(max_length=3, choices=STICKERS, default='NEW')
     # отображается в POS?
@@ -108,7 +114,7 @@ class Dish(models.Model):
     # количество
     quantity = models.IntegerField(validators=[MinValueValidator(0)], default=0)
     # внешний ключ на таблицу с категориями
-    menu_section = models.ForeignKey(MenuSection, on_delete=models.CASCADE)
+    menu_section = models.ManyToManyField(MenuSection, related_name='dish')
     # внешний ключ на таблицу со складами
     store = models.ForeignKey(Store, on_delete=models.CASCADE)
 
@@ -121,7 +127,10 @@ class Dish(models.Model):
         return self.name
 
     def save(self, *args, **kwargs):
-        self.price_discount = self.price * (1 - self.discount / 100)
+        self.price_discount = self.price * (1 - self.discount / 100 + self.increment / 100) - self.discount_rub \
+                              + self.increment_rub
+        if self.price_discount < 0:
+            self.price_discount = 0
         try:
             self.margin = (self.price_discount - self.cost) / self.cost * 100
         except ZeroDivisionError:

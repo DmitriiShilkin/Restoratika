@@ -121,9 +121,10 @@
 
 
                             <div class="saveBtn-box">
-                                <button onclick="window.location.href='/booking/';" class="saveBtn cancelBtn" type="button">Отменить</button>
-                                <input class="saveBtn me-2" type="submit" name="action" value="Отправить" />
-                                <input class="saveBtn" type="submit" name="action" value="Подтвердить" />
+
+                                <input class="saveBtn me-2 d-none" type="submit" name="action" value="Отправить" />
+                                <input class="saveBtn mx-4" type="submit" name="action" value="Подтвердить" />
+                                           <button onclick="window.location.href='/booking/';" class="saveBtn cancelBtn" type="button">Отменить</button>
                             </div>
                         </div>
                     </div>
@@ -290,6 +291,13 @@
             return false;
         });
 
+        function limit_input() {
+            var field = document.getElementById("number_field");
+            var max_length = 3;
+            if (field.value.length > max_length) {
+                field.value = field.value.slice(0, max_length);
+            }
+        }
 
     </script>
 
