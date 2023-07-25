@@ -10,15 +10,25 @@
 {% block content %}
 
 
-         <div class="container-fluid menu-common-font col-5">
+         <div class="container-fluid menu-common-font">
+          <div class="row pb-5 justify-content-between">
+    <div class="col">
+  		<a href="{% url 'section_create' %}"><img src="/static/img/addsection.png" class="add_section_btn"></a>
+    </div>
+        <div class="col d-flex justify-content-end">
+            <div class="dishes-top-menu d-flex justify-content-between px-3 py-2">
+                <button class="cat-menu" onclick="window.location.href='/menu/';">Разделы каталога</button>
+                 <button onclick="window.location.href='{% url 'dishes_stoplist' %}';">Стоп-лист</button>
+            </div>
+        </div>
+    </div>
          <div class="row">
-         <div class="col">
+         <div class="col-5">
 
              	<!--  Добавляем форму, которая объединяет набор полей, которые будут отправляться в запросе -->
 	<form action="" method="get">
 		<!-- Переменная, которую мы передали через контекст, может сгенерировать нам форму с полями -->
 		{{ filterset.form.as_p }}
-		<a href="{% url 'section_create' %}"><img src="/static/img/addsection.png" class="add_section_btn"></a>
 	</form>
 
          </div>
@@ -84,5 +94,11 @@
 
 
          </div>
-
+    <script>
+$(document).ready(function() {
+    if (window.location.href.indexOf("menu") > -1) {
+      $('.cat-menu').addClass('blue-text-btn');
+    }
+  });
+</script>
 {% endblock content %}

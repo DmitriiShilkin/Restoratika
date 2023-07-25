@@ -100,7 +100,7 @@ class DishListView(ListView):
                 dish.price = abs(new_price)
                 dish.save()
 
-        return redirect('/dishes')
+        return redirect('/dishes/')
 
 
 # Представление для просмотра и редактирования товара
@@ -156,3 +156,105 @@ def del_stop_list_view(request, pk):
     dish.save()
 
     return redirect('/dishes/')
+
+
+# Представление для просмотра всех товаров в наличии
+class DishInstockView(ListView):
+    model = Dish
+    template_name = 'menu/dishes.html'
+    context_object_name = 'dishes'
+    paginate_by = 20
+    ordering = 'name'
+
+    def get_queryset(self):
+        # Получаем обычный запрос
+        queryset = super().get_queryset()
+
+        # Применяем выбранную сортировку
+        self.sortform = DishSortForm(self.request.GET)
+        if self.sortform.is_valid():
+            if self.sortform.cleaned_data['ordering']:
+                queryset = queryset.order_by(self.sortform.cleaned_data['ordering'])
+
+        # Используем наш класс фильтрации.
+        # Сохраняем нашу фильтрацию в объекте класса,
+        # чтобы потом добавить в контекст и использовать в шаблоне.
+        self.filterset = DishFilter(self.request.GET, queryset.filter(is_in_stop_list='False'))
+        # Возвращаем из функции отфильтрованный список товаров
+        return self.filterset.qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Добавляем в контекст объект фильтрации.
+        context['filterset'] = self.filterset
+        context['sortform'] = self.sortform
+
+        return context
+
+    # изменение цены у товара в представлении списком
+    def post(self, request, *args, **kwargs):
+        # если пост-запрос не пустой
+        if request.POST:
+            # получаем последний элемент из QueryDict
+            for element in request.POST.items():
+                d = element
+            # находим товар в БД с названием из запроса
+            dish = Dish.objects.get(pk=d[0])
+            new_price = float(d[1])
+            if dish.price != new_price:
+                # устанавливаем новую цену
+                dish.price = abs(new_price)
+                dish.save()
+
+        return redirect('/dishes/instock/')
+
+
+# Представление для просмотра всех товаров в стоп-листе
+class DishStoplistView(ListView):
+    model = Dish
+    template_name = 'menu/dishes.html'
+    context_object_name = 'dishes'
+    paginate_by = 20
+    ordering = 'name'
+
+    def get_queryset(self):
+        # Получаем обычный запрос
+        queryset = super().get_queryset()
+
+        # Применяем выбранную сортировку
+        self.sortform = DishSortForm(self.request.GET)
+        if self.sortform.is_valid():
+            if self.sortform.cleaned_data['ordering']:
+                queryset = queryset.order_by(self.sortform.cleaned_data['ordering'])
+
+        # Используем наш класс фильтрации.
+        # Сохраняем нашу фильтрацию в объекте класса,
+        # чтобы потом добавить в контекст и использовать в шаблоне.
+        self.filterset = DishFilter(self.request.GET, queryset.filter(is_in_stop_list='True'))
+        # Возвращаем из функции отфильтрованный список товаров
+        return self.filterset.qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Добавляем в контекст объект фильтрации.
+        context['filterset'] = self.filterset
+        context['sortform'] = self.sortform
+
+        return context
+
+    # изменение цены у товара в представлении списком
+    def post(self, request, *args, **kwargs):
+        # если пост-запрос не пустой
+        if request.POST:
+            # получаем последний элемент из QueryDict
+            for element in request.POST.items():
+                d = element
+            # находим товар в БД с названием из запроса
+            dish = Dish.objects.get(pk=d[0])
+            new_price = float(d[1])
+            if dish.price != new_price:
+                # устанавливаем новую цену
+                dish.price = abs(new_price)
+                dish.save()
+
+        return redirect('/dishes/stoplist')

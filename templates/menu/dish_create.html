@@ -6,9 +6,21 @@
 
 {% block content %}
 {% load crispy_forms_tags %}
-
-
-
+<head>
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.15.2/css/selectize.default.min.css"
+  integrity="sha512-pTaEn+6gF1IeWv3W1+7X7eM60TFu/agjgoHmYhAfLEU8Phuf6JKiiE8YmsNC0aCgQv4192s4Vai8YZ6VNM6vyQ=="
+  crossorigin="anonymous"
+  referrerpolicy="no-referrer"
+/>
+<script
+  src="https://cdnjs.cloudflare.com/ajax/libs/selectize.js/0.15.2/js/selectize.min.js"
+  integrity="sha512-IOebNkvA/HZjMM7MxL0NYeLYEalloZ8ckak+NDtOViP7oiYzG5vn6WVXyrJDiJPhl4yRdmNAG49iuLmhkUdVsQ=="
+  crossorigin="anonymous"
+  referrerpolicy="no-referrer"
+></script>
+</head>
 
     <h1>Добавить товар</h1>
 
@@ -38,60 +50,60 @@
                 </div>
                 <div class="col-9">
                     <div class="row">
-                        <div class="col">
+                        <div class="col-4" style="min-width: 90px;">
                                 {{ form.price|as_crispy_field }}
                         </div>
-                            <div class="col">
-                    <div id="div_id_nacenka" class="form-group"><label for="id_nacenka" class="requiredField">Наценка</label><div>
-<input readonly type="text" name="nacenka" value="{{ dish.margin }}%" step="any" class="numberinput form-control" required="" id="id_nacenka"></div>
-</div>
-                        </div>
                     </div>
-                    <div class="row">
-                        <div class="col">
-                                    {{ form.cost|as_crispy_field }}
-                        </div>
+                     <div class="row">
+                                <div class="col">
+                    {{ form.description|as_crispy_field }}
+            </div>
+{#                            <div class="col">#}
+{#                    <div id="div_id_nacenka" class="form-group"><label for="id_nacenka" class="requiredField">Наценка</label><div>#}
+{#<input readonly type="text" name="nacenka" value="{{ dish.margin }}%" step="any" class="numberinput form-control" required="" id="id_nacenka"></div>#}
+{#</div>#}
+{#                        </div>#}
                     </div>
 
                 </div>
 
             </div>
 
+          <div class="row">
+                        <div class="col-6">
+{{ form.store|as_crispy_field }}
+                        </div>
+                          <div class="col-6">
+{{ form.menu_section|as_crispy_field }}
+                        </div>
+                    </div>
+
 
         <div class="row">
             <div class="col">
-                    {{ form.description|as_crispy_field }}
+                {{ form.sticker|as_crispy_field }}
             </div>
         </div>
 
+                  <div class="row">
+                        <div class="col">
+    {{ form.discount|as_crispy_field }}
+                        </div>
+                          <div class="col">
+    {{ form.discount_rub|as_crispy_field }}
+                        </div>
+                    </div>
+
+            <div class="row">
+                        <div class="col">
+    {{ form.increment|as_crispy_field }}
+                        </div>
+                          <div class="col">
+    {{ form.increment_rub|as_crispy_field }}
+                        </div>
+                    </div>
 
 
-
-        <div class="row">
-            <div class="col-6">
-           {{ form.quantity|as_crispy_field }}
-            </div>
-                <div class="col-6">
-            {{ form.discount|as_crispy_field }}
-            </div>
-        </div>
-
-
-        <div class="row">
-            <div class="col-6">
-           {{ form.store|as_crispy_field }}
-            </div>
-                <div class="col-6">
-            {{ form.menu_section|as_crispy_field }}
-            </div>
-        </div>
-
-
-     <div class="row">
-            <div class="col">
-    {{ form.sticker|as_crispy_field }}
-            </div>
-        </div>
 
         <div class="row pt-4 common-font" style="text-align: left; font-size: 16px; font-weight: 400;">
             <div class="col">
@@ -108,16 +120,18 @@
 
         <div class="row pt-5">
             <div class="col save_block">
+                         <input class="saveBtn" type="submit" value="Сохранить">
+                 </form>
            <button onclick="location.href = '/dishes'" class="saveBtn cancelBtn">Отменить</button>
-                <input class="saveBtn" type="submit" value="Сохранить">
-            </div>
-        </div>
-
-
 
             </div>
         </div>
-    </form>
+
+
+
+            </div>
+        </div>
+
 
         </div>
 
@@ -130,6 +144,36 @@
 {#        alert('Файл загружен')#}
 {#    });#}
 
+//Multiselect
+
+{#$('select[multiple] option').on('mousedown', function(e) {#}
+{#    var $this = $(this),#}
+{#        that = this,#}
+{#        scroll = that.parentElement.scrollTop;#}
+{##}
+{#    e.preventDefault();#}
+{#    $this.prop('selected', !$this.prop('selected'));#}
+{##}
+{#    setTimeout(function() {#}
+{#        that.parentElement.scrollTop = scroll;#}
+{#    }, 0);#}
+{##}
+{#    return false;#}
+
+
+
+  $(function () {
+    $("#id_menu_section").selectize({
+      plugins: ["restore_on_backspace", "remove_button"],
+      delimiter: " - ",
+      persist: false,
+      maxItems: null,
+      valueField: "email",
+      labelField: "name",
+      searchField: ["name", "email"],
+    });
+  });
+
 function limit_input(length, id) {
 			var field = document.getElementById(id);
 			var max_length = length;
@@ -137,7 +181,6 @@ function limit_input(length, id) {
 				field.value = field.value.slice(0, max_length);
 			}
 		}
-
 
     </script>
 

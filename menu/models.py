@@ -90,9 +90,9 @@ class Dish(models.Model):
     # цена после скидки
     price_discount = models.FloatField(validators=[MinValueValidator(0.0)], editable=False)
     # себестоимость
-    cost = models.FloatField(validators=[MinValueValidator(0.0)])
+    # cost = models.FloatField(validators=[MinValueValidator(0.0)])
     # наценка
-    margin = models.FloatField(validators=[MinValueValidator(0.0)], editable=False)
+    # margin = models.FloatField(validators=[MinValueValidator(0.0)], editable=False)
     # скидка в процентах
     discount = models.FloatField(default=0.0, validators=[MinValueValidator(0.0)])
     # скидка в рублях
@@ -131,10 +131,10 @@ class Dish(models.Model):
                               + self.increment_rub
         if self.price_discount < 0:
             self.price_discount = 0
-        try:
-            self.margin = (self.price_discount - self.cost) / self.cost * 100
-        except ZeroDivisionError:
-            self.margin = 0
+        # try:
+        #     self.margin = (self.price_discount - self.cost) / self.cost * 100
+        # except ZeroDivisionError:
+        #     self.margin = 0
 
         super().save(*args, **kwargs)
 

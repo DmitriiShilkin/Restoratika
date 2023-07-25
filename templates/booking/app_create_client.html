@@ -32,11 +32,29 @@
     <a class="popup-open d-none" href="#">Открыть popup</a>
       <div class="container-fluid client-form">
     <div class="row center-content">
-        <div class="col-5">
+        <div class="col-4">
                       <h2>Забронировать столик</h2>
              <form action="" method="post">
         {% csrf_token %}
-                 <div class="row"
+
+  <div class="row">
+    <div class="col">
+                {% if form.errors %}
+    {% for field in form %}
+        {% for error in field.errors %}
+                <div class="error-box alert alert-danger" style="width: fit-content">
+          {{ error }}
+                </div>
+        {% endfor %}
+    {% endfor %}
+    {% for error in form.non_field_errors %}
+           <div class="error-box alert alert-danger" style="width: fit-content">
+        {{ error }}
+           </div>
+    {% endfor %}
+{% endif %}
+   </div>
+    </div>
 <div class="col">
       {{ form.client_name|as_crispy_field }}
 </div>
@@ -60,7 +78,7 @@
 
 <div class="popup-fade">
 	<div class="popup">
-		<a class="popup-close" href="#">x</a>
+		<a class="popup-close" href="#"><img width="32px" src="/static/img/close.png" alt="Стрелка"></a>
 	    <div class="timechange"></div>
 	</div>
 </div>
@@ -70,7 +88,6 @@ input[type=time]::-webkit-datetime-edit-ampm-field {
   display: none;
 }
         </style>
-
 
 <div class="row flex-column">
     <div class="col">
@@ -104,6 +121,8 @@ input[type=time]::-webkit-datetime-edit-ampm-field {
 
     <script>
 
+
+
         function limit_input() {
             var field = document.getElementById("number_field");
             var max_length = 3;
@@ -112,6 +131,9 @@ input[type=time]::-webkit-datetime-edit-ampm-field {
                 }
         }
 
+          $(".numberinput").attr({
+       "max" : 999,
+    });
 
         $('#guest_minus').on('click', function() {
             let $input = $('#div_id_number_persons input');
@@ -122,9 +144,10 @@ input[type=time]::-webkit-datetime-edit-ampm-field {
 
         $('#guest_plus').click(function() {
   let $input = $('#div_id_number_persons input');
-    let count = parseInt($input.val()) + 1;
-    count = count > parseInt($input.data('max-count')) ? parseInt($input.data('max-count')) : count;
-    $input.val(parseInt(count));
+      let count = parseInt($input.val()) + 1;
+      count = count > parseInt($input.data('max-count')) ? parseInt($input.data('max-count')) : count;
+      $input.val(parseInt(count));
+
 });
 
         $('#div_id_number_persons input').bind("change keyup input click", function() {

@@ -6,7 +6,6 @@ from django.urls import reverse
 # импорт стандартных моделей
 from django.db import models
 
-from django.db import transaction
 # импорт валидаторов
 from django.core.validators import MinValueValidator, MaxValueValidator, EmailValidator
 
@@ -41,7 +40,7 @@ class Table(models.Model):
     # поля таблицы, поле id создается автоматически, его указывать не нужно
     number = models.CharField(max_length=10)
     description = models.CharField(max_length=128, blank=True)
-    is_available = models.BooleanField(default=True)
+    # is_available = models.BooleanField(default=True)
     occupied = models.TextField(default=[])
     hall = models.ForeignKey(Hall, on_delete=models.CASCADE)
 
@@ -60,7 +59,10 @@ class Table(models.Model):
     # преобразуем строку из БД в список, освобождаем столик, делаем обратное преобразование
     def free_occupied(self, date, time):
         dt = str(datetime.combine(date, time))
-        occupied_list = json.loads(self.occupied)
+        # читаем новое (не кэшированное) значение из БД
+        table = Table.objects.get(id=self.pk)
+        occupied = table.occupied
+        occupied_list = json.loads(occupied)
         if dt in occupied_list:
             occupied_list.remove(dt)
             self.occupied = json.dumps(occupied_list)
@@ -69,7 +71,10 @@ class Table(models.Model):
     # преобразуем строку из БД в список и проверяем занят ли стол на указанную дату-время
     def is_occupied(self, date, time):
         dt = datetime.combine(date, time)
-        occupied_list = json.loads(self.occupied)
+        # читаем новое (не кэшированное) значение из БД
+        table = Table.objects.get(id=self.pk)
+        occupied = table.occupied
+        occupied_list = json.loads(occupied)
         minutes = -(INTERVAL - 5)
         while minutes < INTERVAL:
             new_dt = dt + timedelta(minutes=minutes)

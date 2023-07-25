@@ -132,9 +132,10 @@
                                                         <div class="contact-name common-font">{{ a.client_name }}</div>
                                                         <div class="contact-phone common-font">{{ a.client_phone }}</div>
                                                     </div>
-                                                    <div class="comment-col common-font center-content">{{ a.comment }}</div>
-                                                    <div class="table-col center-content"><span class="table-num center-content"><span>{{ a.table }}</span></div>
-                                                    <a class="center-content" href="{% url 'app_detail' pk=a.pk %}"><div class="link-arrow center-content"><img src="{% static 'img/rightarrow.png' %}" alt="Стрелка"></div></a>
+                                                    <div class="comment-col common-font center-content" style="margin-left:20px; margin-right:20px;width: 170px;">{{ a.comment }}</div>
+                                                      <div class="status-col common-font center-content mx-1">{{ a.get_status_display }}</div>
+                                                    <div class="table-col center-content"><span class="table-num center-content mx-2" style="margin-right: 0"><span>{{ a.table }}</span></div>
+                                                    <a class="center-content" href="{% url 'app_detail' pk=a.pk %}"><div class="link-arrow center-content" style="margin-right: 0"><img src="{% static 'img/rightarrow.png' %}" alt="Стрелка"></div></a>
                                                 </div>
                                             </li>
                                         {% endfor %}

@@ -47,28 +47,33 @@ class DishForm(forms.ModelForm):
     )
 
     price = forms.FloatField(widget=NumberInput(
-        attrs={'type': 'text', 'class': 'my_class', 'id': 'price', 'oninput': 'limit_input(7, id)'}),
+        attrs={'type': 'text', 'id': 'price', 'oninput': 'limit_input(7, id)'}),
+        min_value=0.01,
         label='Цена, руб.',
     )
 
     discount = forms.FloatField(widget=NumberInput(
-        attrs={'type': 'text', 'class': 'my_class', 'id': 'discount', 'oninput': 'limit_input(5, id)'}),
+        attrs={'type': 'text', 'id': 'discount', 'oninput': 'limit_input(5, id)'}),
         label='Скидка, %',
+        initial=0.0
     )
 
     discount_rub = forms.FloatField(widget=NumberInput(
-        attrs={'type': 'text', 'class': 'my_class', 'id': 'discount_rub', 'oninput': 'limit_input(5, id)'}),
+        attrs={'type': 'text', 'id': 'discount_rub', 'oninput': 'limit_input(5, id)'}),
         label='Скидка, руб.',
+        initial=0.0
     )
 
     increment = forms.FloatField(widget=NumberInput(
-        attrs={'type': 'text', 'class': 'my_class', 'id': 'increment', 'oninput': 'limit_input(5, id)'}),
+        attrs={'type': 'text', 'id': 'increment', 'oninput': 'limit_input(5, id)'}),
         label='Надбавка, %',
+        initial=0.0
     )
 
     increment_rub = forms.FloatField(widget=NumberInput(
-        attrs={'type': 'text', 'class': 'my_class', 'id': 'increment_rub', 'oninput': 'limit_input(5, id)'}),
+        attrs={'type': 'text', 'id': 'increment_rub', 'oninput': 'limit_input(5, id)'}),
         label='Надбавка, руб.',
+        initial=0.0
     )
 
     # Удаляем двоеточие у Label

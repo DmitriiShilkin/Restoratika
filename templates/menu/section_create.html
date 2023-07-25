@@ -3,14 +3,31 @@
 {% block title %}
     Menu Section Add
 {% endblock title %}
+{% load crispy_forms_tags %}
+
 
 {% block content %}
     <h2>Добавление категории</h2>
     <hr>
+        <div class="container w-25">
+    <div class="row">
+        <div class="col">
     <form action="" method="post">
         {% csrf_token %}
-        {{ form.as_p }}
-        <input type="button" onclick="history.back();" value="Отменить"/>
-        <input type="submit" value="Сохранить" />
-    </form>
+   {{ form.name|as_crispy_field }}
+       {{ form.description|as_crispy_field }}
+        </div>
+        </div>
+
+         <div class="row pt-5">
+            <div class="col save_block">
+                  <input class="saveBtn" type="submit" value="Сохранить">
+                    </form>
+           <button onclick="history.back();" class="saveBtn cancelBtn">Отменить</button>
+            </div>
+        </div>
+
+        </div>
 {% endblock content %}
+
+

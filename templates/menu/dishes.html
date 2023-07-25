@@ -10,10 +10,17 @@
 
 {% block content %}
     <div class="container-fluid pb-5">
-    <div class="row pb-5">
+    <div class="row pb-5 justify-content-between">
     <div class="col">
   	<button class="create-app"  onclick="window.location.href='{% url 'dish_create' %}';">Добавить</button>
     </div>
+        <div class="col d-flex justify-content-end">
+            <div class="dishes-top-menu d-flex justify-content-between px-3 py-2">
+                <button onclick="window.location.href='/menu/';">Разделы каталога</button>
+                 <button class="btn_stop" onclick="window.location.href='{% url 'dishes_stoplist' %}';">Стоп-лист</button>
+                   <button class="btn_active d-none" onclick="window.location.href='{% url 'dishes_instock' %}';">Активные</button>
+            </div>
+        </div>
     </div>
 
     	<form class="filters-form" enctype='multipart/form-data' action="" method="get">
@@ -38,7 +45,10 @@
             <div class="col" style="display: flex;justify-content: flex-end;">
          <div class="col-4 me-2">
             		<!-- Форма для сортировки -->
-		{{ form.ordering|as_crispy_field }}
+
+
+           {{ sortform }}
+
 		<input class="d-none" id="filter_sub" type="submit" value="Сортировать">
          </div>
 
@@ -57,7 +67,7 @@
         <div class="col-1">Фото</div>
          <div class="col-5" style="text-align: left">Наименование</div>
          <div class="col">Цена</div>
-         <div class="col">Количество</div>
+
          <div class="col">В наличии</div>
          <div class="col">Удалить</div>
         </div>
@@ -72,8 +82,50 @@
 					{% endif %}
                 </div>
             <div class="col-5 center-content" style="justify-content: flex-start"><a href="{% url 'dish_detail' pk=dish.pk %}">{{ dish.name }}</a></div>
-                 <div class="col center-content">{{ dish.price_discount|floatformat:2 }} &#8381;</div>
-                 <div class="col center-content">{{ dish.quantity }} шт.</div>
+                 <div class="col center-content change-price" onclick="removeStyle(this);">
+                 	<form action="" method="post" class="change-price-form position-relative">
+					{% csrf_token %}
+					{% if dish.price != dish.price_discount %}
+                        <div class="row flex-nowrap">
+                            <div class="col px-0">{{ dish.price_discount|floatformat:2 }} &#8381;</div>
+                            <div class="col px-1"><p style="text-decoration: line-through">	{{ dish.price|floatformat:2 }} &#8381;</p></div>
+
+                        <div class="hide-input d-none">
+                                        <div class="row flex-nowrap bg-white">
+                                 <div class="col">
+					<input class="price-input" type="number" name="{{ dish.pk }}" id="{{ dish }}" value="{{ dish.price|floatformat:2 }}"
+								   oninput="limit_input(id)">
+                                 </div>
+                                                  <div class="col px-0 mx-0">
+						<input class="save-input" type="submit" value="">
+                                                       </div>
+                                             </div>
+                        </div>
+                          </div>
+					{% else %}
+                             <div class="row flex-nowrap bg-white">
+                         <div class="col px-0">
+                        {{ dish.price|floatformat:2 }} &#8381;
+                         </div>
+
+                        <br>
+                         <div class="hide-input d-none">
+                             <div class="row flex-nowrap">
+                                 <div class="col">
+						<input class="price-input" type="number" name="{{ dish.pk }}" id="{{ dish }}" value="{{ dish.price|floatformat:2 }}"
+							   oninput="limit_input(id)">
+                                        </div>
+                                    <div class="col px-0 mx-0">
+						<input class="save-input" type="submit" value="">
+                                         </div>
+                                  </div>
+                         </div>
+                              </div>
+					{% endif %}
+					</form>
+
+                 </div>
+
                  <div class="col center-content">{% if not dish.is_in_stop_list %}
 					<a class="toggle-link" href="{% url 'dish_addsl' pk=dish.pk %}">
 
@@ -128,7 +180,39 @@
 		{% endif %}
 	{% endif %}
 </div>
+
+
+
+
   <script>
+
+function removeStyle(element) {
+  $( ".hide-input" ).each(function() {
+  $( this ).addClass('d-none');
+});
+
+   let el = $(element).find(".hide-input");
+   el.removeClass('d-none');
+}
+
+
+$('.price-input').keypress(function (e) {
+  if (e.which == 13) {
+    $('.change-price-form').submit();
+  }
+});
+
+
+
+$(document).on('keydown', function(event) {
+       if (event.key == "Escape") {
+            $('.change-price-form').each(function(){
+    this.reset();
+});
+          $('.hide-input').addClass('d-none');
+       }
+   });
+
   $("#id_store").on("change",function() {
     $("#form_sub").click();
 });
@@ -150,8 +234,17 @@ function limit_input(id) {
 			}
 		}
 
+$(document).ready(function() {
+    if (window.location.href.indexOf("stoplist") > -1) {
+      $('.btn_stop').addClass('d-none');
+       $('.btn_active').removeClass('d-none');
+        $('.btn_active').addClass('blue-text-btn');
+    } else if (window.location.href.indexOf("instock") > -1) {
+          $('.btn_stop').addClass('blue-text-btn');
+    }
+  });
+</script>
 
-  </script>
 
 
 

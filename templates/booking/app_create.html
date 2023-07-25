@@ -45,18 +45,24 @@
 
         <div class="container-fluid pt-0">
 
-            <div class="error-box">
+  <div class="row">
+    <div class="col">
                 {% if form.errors %}
     {% for field in form %}
         {% for error in field.errors %}
+                <div class="error-box alert alert-danger" style="width: fit-content">
           {{ error }}
+                </div>
         {% endfor %}
     {% endfor %}
     {% for error in form.non_field_errors %}
+           <div class="error-box alert alert-danger" style="width: fit-content">
         {{ error }}
+           </div>
     {% endfor %}
 {% endif %}
-            </div>
+   </div>
+    </div>
 
             <div class="row">
 

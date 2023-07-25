@@ -1,5 +1,3 @@
-from time import sleep
-
 from django.db.models import Q
 from django.shortcuts import render, redirect
 # импорт стандартных дженериков-представлений из Джанго
@@ -18,16 +16,6 @@ from .tasks import confirmed_email_notification, canceled_email_notification
 # импорт задач по работе с Райда
 from .tasks import create_task
 from .tasks import update_task, get_task_id, get_status_id
-
-
-# получение свободных столиков
-def get_free_tables(app):
-    free_tables = []
-    tables = Table.objects.all()
-    for table in tables:
-        if not table.is_occupied(app.date, app.time):
-            free_tables += table
-    return free_tables
 
 
 # Представление для отображения списком всех заявок
@@ -92,17 +80,9 @@ class ApplicationDetail(UpdateView):
         if app.status not in ['CAN', 'FIN']:
             if app.status != 'CNF':
                 # отправляем уведомление о подтверждении брони клиенту
-                confirmed_email_notification(app.client_name, app.date, app.time, app.client_email)
+                if app.client_email:
+                    confirmed_email_notification(app.client_name, app.date, app.time, app.client_email)
                 app.status = 'CNF'
-
-            old_app = Application.objects.get(id=app.pk)
-            # Если данные заявки изменяются, освобождаем стол
-            if not (app.table == old_app.table and app.date == old_app.date and app.time == old_app.time):
-                old_app.table.free_occupied(old_app.date, old_app.time)
-
-                # Если столик выбран, то занимаем его
-                if app.table.id != 1:
-                    app.table.set_occupied(app.date, app.time)
 
             # получаем id статуса и задачи из Райды
             status_id = get_status_id(app.status)
@@ -142,15 +122,11 @@ class ApplicationCreate(CreateView):
 
         # присваиваем статус "Подтверждена"
         app.status = 'CNF'
-
-        # Если столик выбран, то занимаем его
-        if app.table.id != 1:
-            app.table.set_occupied(app.date, app.time)
-
         app.save()
 
         # отправляем уведомление о подтверждении брони клиенту
-        confirmed_email_notification(app.client_name, app.date, app.time, app.client_email)
+        if app.client_email:
+            confirmed_email_notification(app.client_name, app.date, app.time, app.client_email)
 
         # создаем задачу в Райде
         create_task(app.date, app.time, app.number_persons, app.client_name, app.client_phone, app.client_email,
@@ -236,7 +212,8 @@ def application_cancel(request, pk):
         update_task(app.table, status_id, task_id)
 
         # отправляем уведомление об отмене брони клиенту
-        canceled_email_notification(app.client_name, app.date, app.time, app.client_email)
+        if app.client_email:
+            canceled_email_notification(app.client_name, app.date, app.time, app.client_email)
 
         queryset = Application.objects.all()
         new = ApplicationFilter(request.GET, queryset.filter(status='NEW'))

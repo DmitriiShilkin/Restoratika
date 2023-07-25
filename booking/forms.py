@@ -1,11 +1,12 @@
 # импорт модуля даты и времени
 from datetime import datetime
+
 # импорт стандартных форм Джанго
 from django import forms
 # импорт ошибки валидации из исключений
 from django.core.exceptions import ValidationError
 # импорт поля ввода даты
-from django.forms import DateInput, TimeInput, EmailInput, TextInput, NumberInput
+from django.forms import DateInput, EmailInput, TextInput, NumberInput
 # импорт метода для локализации полей формы
 from django.utils.translation import gettext_lazy as _
 
@@ -74,21 +75,38 @@ class ApplicationForm(forms.ModelForm):
                 self.fields['guest_num'].initial = self.instance.number_persons
 
     # поля с проверками минимальной длины, виджетом выбора даты, времени и описанием для отображения в форме
+    client_name = forms.CharField(min_length=3, max_length=64, label='Имя')
+
     client_phone = forms.CharField(min_length=11, max_length=13, label='Телефон')
+
     date = forms.DateField(widget=DateInput(
-        attrs={'type': 'date', 'class': 'my_class'}),
+        attrs={'type': 'date'}),
         label='',
         initial=datetime.today().date()
     )
-    client_email = forms.EmailField(widget=EmailInput(attrs={'type': 'email'}), label='E-mail', required=False)
+
+    client_email = forms.EmailField(
+        widget=EmailInput(attrs={'type': 'email'}),
+        max_length=32,
+        label='E-mail',
+        required=False
+    )
+
     hours = forms.ChoiceField(widget=forms.RadioSelect, choices=HOURS_STATES, label='Часы')
+
     minutes = forms.ChoiceField(widget=forms.RadioSelect, choices=MINUTES_STATES, label='Минуты')
+
     guest_num = forms.ChoiceField(widget=forms.RadioSelect, choices=GUESTS_STATES, label='', required=False)
+
     number_persons = forms.IntegerField(widget=NumberInput(
-        attrs={'type': 'text', 'class': 'my_class', 'id': 'number_field', 'oninput': 'limit_input()'}),
+        attrs={'type': 'text', 'id': 'number_field', 'oninput': 'limit_input()'}),
+        min_value=1,
+        max_value=999,
         label='Количество гостей',
         initial=2,
     )
+
+    comment = forms.CharField(max_length=128, label='Комментарий', required=False)
 
     class Meta:
         # наша модель
@@ -182,13 +200,33 @@ class ApplicationForm(forms.ModelForm):
 
         # получаем выбранный столик
         table = cleaned_data.get("table")
+        app = Application.objects.filter(pk=self.instance.pk).first()
 
-        # если он занят, то выводим ошибку
-        if not (table == self.instance.table and date == self.instance.date and time == self.instance.time) and\
-                table.is_occupied(date, time):
-            raise ValidationError(
-                "Выбранный столик уже забронирован!"
-            )
+        # если заявка существует
+        if app:
+            old_table = app.table
+            old_date = app.date
+            old_time = app.time
+        else:
+            old_table = old_date = old_time = None
+
+        # если столик выбран
+        if table.id != 1:
+            # если изменились либо столик, либо дата, либо время
+            if not (table == old_table and date == old_date and time == old_time):
+                # если заявка существует
+                if app:
+                    # освобождаем старый столик на старую дату и время
+                    old_table.free_occupied(old_date, old_time)
+                # проверяем занят ли новый столик на новую дату и время, если да, то выводим ошибку
+                if table.is_occupied(date, time):
+                    raise ValidationError(
+                        "Выбранный столик уже забронирован!"
+                    )
+                # если столик свободен
+                else:
+                    # занимаем его
+                    table.set_occupied(date, time)
 
         return cleaned_data
 
@@ -201,39 +239,48 @@ class ApplicationClientForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.label_suffix = ""  # Removes : as label suffix
 
-    client_name = forms.CharField(widget=TextInput(
-        attrs={'type': 'text', 'class': 'my_class', 'placeholder': 'Имя'}),
-        label='',
-    )
     # поля с проверками минимальной длины, виджетом выбора даты, времени и описанием для отображения в форме
+    client_name = forms.CharField(widget=TextInput(
+        attrs={'type': 'text', 'placeholder': 'Имя'}),
+        label='',
+        min_length=3,
+        max_length=64,
+    )
+
     client_phone = forms.CharField(widget=TextInput(
-        attrs={'type': 'text', 'class': 'my_class', 'placeholder': 'Телефон'}),
+        attrs={'type': 'text', 'placeholder': 'Телефон'}),
         label='',
         min_length=11,
         max_length=17,
     )
 
     date = forms.DateField(widget=DateInput(
-        attrs={'type': 'date', 'class': 'my_class'}),
+        attrs={'type': 'date'}),
         label='Дата и время визита',
     )
+
     time = forms.CharField(widget=TextInput(
-        attrs={'type': 'text', 'class': 'my_class'}),
+        attrs={'type': 'text'}),
         label=' ',
     )
+
     client_email = forms.EmailField(widget=EmailInput(
-        attrs={'type': 'email', 'class': 'my_class', 'placeholder': 'E-mail'}),
+        attrs={'type': 'email', 'placeholder': 'E-mail'}),
+        max_length=32,
         label='',
     )
     comment = forms.CharField(widget=TextInput(
-        attrs={'type': 'text', 'class': 'my_class', 'placeholder': 'Комментарий'}),
+        attrs={'type': 'text', 'placeholder': 'Комментарий'}),
+        max_length=128,
         label='',
         required=False,
     )
 
     number_persons = forms.IntegerField(widget=NumberInput(
-        attrs={'type': 'text', 'class': 'my_class', 'id': 'number_field', 'oninput': 'limit_input()'}),
+        attrs={'type': 'text', 'id': 'number_field', 'oninput': 'limit_input()'}),
         label='',
+        min_value=1,
+        max_value=999,
         initial=2,
     )
 
@@ -289,10 +336,14 @@ class ApplicationClientForm(forms.ModelForm):
             phone = phone.replace(')', '')
             phone = phone.replace(' ', '')
 
-        # проверяем номер телефона на наличие букв и спец. символов
+        # проверяем номер телефона на наличие букв и спец. символов максимального количества цифр
         if not phone.isdigit():
             raise ValidationError(
                 "В номере телефона допустимы только цифры, пробелы и знаки '+', '-', '(', ')'!"
+            )
+        elif len(phone) > 12:
+            raise ValidationError(
+                "В номере телефона может быть не более 12 цифр!"
             )
 
         # оставляем в номере только знак "плюс", если он есть
@@ -323,43 +374,6 @@ class ApplicationClientForm(forms.ModelForm):
 
         return cleaned_data
 
-
-# class ApplicationUpdateForm(forms.ModelForm):
-#
-#     # Удаляем двоеточие у Label
-#     def __init__(self, *args, **kwargs):
-#         super().__init__(*args, **kwargs)
-#         self.label_suffix = ""  # Removes : as label suffix
-#
-#     class Meta:
-#         # наша модель
-#         model = Application
-#         # поля, которые будут выводиться в форму, в порядке указания в списке
-#         fields = [
-#             # 'hall',
-#             'table'
-#         ]
-#
-#         # описания полей для отображения в форме
-#         labels = {
-#             # 'hall': _('Зал'),
-#             'table': _(''),
-#         }
-#
-#     def clean(self):
-#         cleaned_data = super().clean()
-#
-#         app = Application.objects.get(id=self.instance.pk)
-#
-#         # получаем выбранный столик
-#         table = cleaned_data.get("table")
-#         # если он занят, то выводим ошибку
-#         if table.is_occupied(app.date, app.time):
-#             raise ValidationError(
-#                 "Выбранный столик уже забронирован!"
-#             )
-#
-#         return cleaned_data
 
 # ApplicationForm.base_fields['table'] = forms.ModelChoiceField(
 #     widget=forms.Select,
