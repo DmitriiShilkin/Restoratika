@@ -99,7 +99,7 @@ class ApplicationForm(forms.ModelForm):
     guest_num = forms.ChoiceField(widget=forms.RadioSelect, choices=GUESTS_STATES, label='', required=False)
 
     number_persons = forms.IntegerField(widget=NumberInput(
-        attrs={'type': 'text', 'id': 'number_field', 'oninput': 'limit_input()'}),
+        attrs={'type': 'number', 'id': 'number_field', 'oninput': 'limit_input()'}),
         min_value=1,
         max_value=999,
         label='Количество гостей',
@@ -188,7 +188,7 @@ class ApplicationForm(forms.ModelForm):
                 "Дата бронирования не может быть раньше текущей!"
             )
 
-        # получаем введенное количество гостей
+        # # получаем введенное количество гостей
         number_persons = cleaned_data.get("number_persons")
         guest_num = cleaned_data.get("guest_num")
         # проверяем, из какой переменной взять количество гостей для сохранения в БД
@@ -200,6 +200,7 @@ class ApplicationForm(forms.ModelForm):
 
         # получаем выбранный столик
         table = cleaned_data.get("table")
+
         app = Application.objects.filter(pk=self.instance.pk).first()
 
         # если заявка существует
@@ -209,7 +210,6 @@ class ApplicationForm(forms.ModelForm):
             old_time = app.time
         else:
             old_table = old_date = old_time = None
-
         # если столик выбран
         if table.id != 1:
             # если изменились либо столик, либо дата, либо время
@@ -223,10 +223,6 @@ class ApplicationForm(forms.ModelForm):
                     raise ValidationError(
                         "Выбранный столик уже забронирован!"
                     )
-                # если столик свободен
-                else:
-                    # занимаем его
-                    table.set_occupied(date, time)
 
         return cleaned_data
 
@@ -277,7 +273,7 @@ class ApplicationClientForm(forms.ModelForm):
     )
 
     number_persons = forms.IntegerField(widget=NumberInput(
-        attrs={'type': 'text', 'id': 'number_field', 'oninput': 'limit_input()'}),
+        attrs={'type': 'number', 'id': 'number_field', 'oninput': 'limit_input()'}),
         label='',
         min_value=1,
         max_value=999,
@@ -360,7 +356,26 @@ class ApplicationClientForm(forms.ModelForm):
         date = cleaned_data.get("date")
         # получаем введенное время бронирования
         time = cleaned_data.get("time")
-        time_str = f'{time}:00'
+        # выделяем часы
+        hours = time[:2]
+        try:
+            # и минуты
+            minutes = int(time[3:])
+        except ValueError:
+            raise ValidationError(
+                "Введите корректное значение для минут!"
+            )
+        fraction = minutes % 5
+        # если минуты не кратны 5
+        if fraction:
+            # округляем вниз
+            if fraction in [1, 2]:
+                minutes -= fraction
+            # округляем вверх
+            if fraction in [3, 4]:
+                minutes += (5 - fraction)
+        # собираем часы и минуты в строку время
+        time_str = f'{hours}:{str(minutes)}:00'
         # преобразуем строку в time-объект
         time = datetime.strptime(time_str, '%H:%M:%S').time()
         # объединяем дату и время

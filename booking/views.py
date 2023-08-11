@@ -1,3 +1,5 @@
+# import asyncio
+
 from django.db.models import Q
 from django.shortcuts import render, redirect
 # импорт стандартных дженериков-представлений из Джанго
@@ -5,7 +7,7 @@ from django.views.generic import ListView, CreateView, UpdateView
 from django.urls import reverse_lazy
 
 # импорт нашей модели
-from .models import Application, Table
+from .models import Application
 # импорт нашей формы
 from .forms import ApplicationForm, ApplicationClientForm
 # импорт нашего фильтра
@@ -74,24 +76,34 @@ class ApplicationDetail(UpdateView):
     success_url = reverse_lazy('apps_list')
 
     def form_valid(self, form):
-        # получаем данные из формы до сохранения
-        app = form.save(commit=False)
-        # присваиваем статус "Подтверждена"
-        if app.status not in ['CAN', 'FIN']:
-            if app.status != 'CNF':
-                # отправляем уведомление о подтверждении брони клиенту
-                if app.client_email:
-                    confirmed_email_notification(app.client_name, app.date, app.time, app.client_email)
-                app.status = 'CNF'
+        if self.request.method == 'POST':
+            # получаем данные из формы до сохранения
+            app = form.save(commit=False)
+            # присваиваем статус "Подтверждена"
+            if app.status not in ['CAN', 'FIN']:
+                if app.status != 'CNF':
+                    # отправляем уведомление о подтверждении брони клиенту
+                    if app.client_email:
+                        confirmed_email_notification(app.client_name, app.date, app.time, app.client_email)
+                    app.status = 'CNF'
+                # old_app = Application.objects.get(pk=app.pk)
+                if app.table != 1:
+                    # если изменились либо столик, либо дата, либо время
+                    # if not (app.table == old_app.table and app.date == old_app.date and app.time == old_app.time):
+                        # old_app.table.free_occupied(old_app.date, old_app.time)
+                    app.table.set_occupied(app.date, app.time)
 
-            # получаем id статуса и задачи из Райды
-            status_id = get_status_id(app.status)
-            task_id = get_task_id(app.pk)
-            # обновляем задачу в Райде
-            update_task(app.table, status_id, task_id)
+                # получаем id статуса и задачи из Райды
+                status_id = get_status_id(app.status)
+                task_id = get_task_id(app.pk, app.created_at)
+                # обновляем задачу в Райде
+                update_task(app.date, app.time, app.number_persons, app.client_name, app.client_phone, app.client_email,
+                            app.pk, app.comment, app.hall, app.table, app.created_at, status_id, task_id)
 
-        # сохраняем данные из формы в нашу БД
-        return super().form_valid(form)
+                # сохраняем данные из формы в нашу БД
+                return super().form_valid(form)
+
+        return self.form_invalid(form)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -115,25 +127,36 @@ class ApplicationCreate(CreateView):
 
     # метод валидации данных в форме
     def form_valid(self, form):
-        # получаем данные из формы до сохранения
-        app = form.save(commit=False)
-        # вызываем метод super, для сохранения данных из формы в БД и чтобы у заявки появился pk
-        result = super().form_valid(form)
+        if self.request.method == 'POST':
+            # получаем данные из формы до сохранения
+            app = form.save(commit=False)
+            # вызываем метод super, для сохранения данных из формы в БД и чтобы у заявки появился pk
+            result = super().form_valid(form)
 
-        # присваиваем статус "Подтверждена"
-        app.status = 'CNF'
-        app.save()
+            # присваиваем статус "Подтверждена"
+            app.status = 'CNF'
+            app.save()
 
-        # отправляем уведомление о подтверждении брони клиенту
-        if app.client_email:
-            confirmed_email_notification(app.client_name, app.date, app.time, app.client_email)
+            # если выбран столик, то занимаем его
+            if app.table != 1:
+                app.table.set_occupied(app.date, app.time)
 
-        # создаем задачу в Райде
-        create_task(app.date, app.time, app.number_persons, app.client_name, app.client_phone, app.client_email,
-                    app.pk, app.comment, app.hall, app.table)
+            # отправляем уведомление о подтверждении брони клиенту
+            if app.client_email:
+                confirmed_email_notification(app.client_name, app.date, app.time, app.client_email)
 
-        # сохраняем данные из формы в нашу БД
-        return result
+            # получаем id статуса из Райды
+            status_id = get_status_id(app.status)
+            # создаем задачу в Райде
+            # asyncio.run(
+            create_task(app.date, app.time, app.number_persons, app.client_name, app.client_phone, app.client_email,
+                        app.pk, app.comment, app.hall, app.table, app.created_at, status_id)
+            # )
+
+            # сохраняем данные из формы в нашу БД
+            return result
+
+        return form
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -168,9 +191,13 @@ class ApplicationCreateClient(CreateView):
         # уведомление о новых заявках в телеграм (чат менеджеров)
         telegram_notification(app.pk, app.date, app.time, app.client_name, app.client_phone, app.number_persons)
 
+        # получаем id статуса из Райды
+        status_id = get_status_id(app.status)
         # создаем задачу в Райде
+        # asyncio.run(
         create_task(app.date, app.time, app.number_persons, app.client_name, app.client_phone, app.client_email,
-                    app.pk, app.comment, app.hall, app.table)
+                    app.pk, app.comment, app.hall, app.table, app.created_at, status_id)
+        # )
 
         # сохраняем данные из формы в нашу БД
         return result
@@ -207,9 +234,17 @@ def application_cancel(request, pk):
 
         # получаем id статуса и задачи из Райды
         status_id = get_status_id(app.status)
-        task_id = get_task_id(app.pk)
+        task_id = get_task_id(app.pk, app.created_at)
+
         # обновляем задачу в Райде
-        update_task(app.table, status_id, task_id)
+        # loop = asyncio.new_event_loop()
+        # asyncio.set_event_loop(loop)
+        # loop.run_until_complete(
+        # asyncio.run(
+        update_task(app.date, app.time, app.number_persons, app.client_name, app.client_phone, app.client_email,
+                    app.pk, app.comment, app.hall, app.table, app.created_at, status_id, task_id)
+        # )
+        # loop.close()
 
         # отправляем уведомление об отмене брони клиенту
         if app.client_email:
@@ -231,8 +266,6 @@ def application_cancel(request, pk):
 def application_validate(request, pk):
     # получаем активную заявку
     app = Application.objects.get(id=pk)
-    # queryset = Application.objects.all()
-    # new = ApplicationFilter(request.GET, queryset.filter(status='NEW'))
 
     # присваиваем статус "Проверяется"
     if app.status == 'NEW':
@@ -241,9 +274,17 @@ def application_validate(request, pk):
 
         # получаем id статуса и задачи из Райды
         status_id = get_status_id(app.status)
-        task_id = get_task_id(app.pk)
+        task_id = get_task_id(app.pk, app.created_at)
+
         # обновляем задачу в Райде
-        update_task(app.table, status_id, task_id)
+        # loop = asyncio.new_event_loop()
+        # asyncio.set_event_loop(loop)
+        # asyncio.run(aupdate_task())
+        update_task(app.date, app.time, app.number_persons, app.client_name, app.client_phone, app.client_email,
+                    app.pk, app.comment, app.hall, app.table, app.created_at, status_id, task_id)
+
+        # loop.run_until_complete(
+        # loop.close()
 
     return redirect('app_detail', pk=app.id)
 
@@ -266,9 +307,17 @@ def application_finish(request, pk):
 
         # получаем id статуса и задачи из Райды
         status_id = get_status_id(app.status)
-        task_id = get_task_id(app.pk)
+        task_id = get_task_id(app.pk, app.created_at)
+
         # обновляем задачу в Райде
-        update_task(app.table, status_id, task_id)
+        # loop = asyncio.new_event_loop()
+        # asyncio.set_event_loop(loop)
+        # loop.run_until_complete(
+        # asyncio.run(
+        update_task(app.date, app.time, app.number_persons, app.client_name, app.client_phone, app.client_email,
+                    app.pk, app.comment, app.hall, app.table, app.created_at, status_id, task_id)
+        # )
+        # loop.close()
 
         queryset = Application.objects.all()
         new = ApplicationFilter(request.GET, queryset.filter(status='NEW'))

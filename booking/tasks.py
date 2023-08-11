@@ -1,3 +1,5 @@
+# import asyncio
+# from aiohttp import ClientSession
 import json
 import requests
 
@@ -70,8 +72,8 @@ def canceled_email_notification(client_name, booking_date, booking_time, client_
 
 
 # Создание задачи в Райде
-def create_task(date: str, time: str, persons: int, name: str, phone: str, email: str, number: int, comment: str,
-                hall: str, table: str):
+def create_task(date, time, persons: int, name: str, phone: str, email: str, number: int, comment: str,
+                hall: int, table: int, created_at, status_id: str):
     url = f"{settings.RAIDA_API_URL}/api/tasks/{settings.RAIDA_NODE_ID}/{settings.RAIDA_PROCESS_ID}"
     headers = {"Authorization": f"Bearer {settings.RAIDA_TOKEN}"}
     data = {
@@ -79,7 +81,7 @@ def create_task(date: str, time: str, persons: int, name: str, phone: str, email
         "process_id": settings.RAIDA_PROCESS_ID,
         "title": "application",
         "description": "Заявка на бронирование столика",
-        "status_id": settings.RAIDA_NEW_STATUS_ID,
+        "status_id": status_id,
         "custom_fields": {
             "cf_date": str(date),
             "cf_time": str(time),
@@ -91,40 +93,55 @@ def create_task(date: str, time: str, persons: int, name: str, phone: str, email
             "cf_app_number": number,
             "cf_hall": str(hall),
             "cf_table": str(table),
+            "cf_created_at": str(created_at)
         }
     }
 
     response = requests.post(url, headers=headers, data=json.dumps(data))
     result = json.loads(response.text)
+    # future = asyncio.ensure_future(asyncio.sleep(1, result=result.get("data")))
 
-    # print(response)
-    # print(result)
-
-    return result.get("data")
+    return result
 
 
 # Обновление статуса и номера столика в задаче Райды
-def update_task(table: str, status_id: str, task_id: str):
+def update_task(date, time, persons: int, name: str, phone: str, email: str, number: int, comment: str,
+                hall: int, table: int, created_at, status_id: str, task_id: str):
     url = f"{settings.RAIDA_API_URL}/api/tasks/{settings.RAIDA_NODE_ID}/{task_id}"
     headers = {"Authorization": f"Bearer {settings.RAIDA_TOKEN}"}
     data = {
         "status_id": status_id,
         "custom_fields": {
+            "cf_date": str(date),
+            "cf_time": str(time),
+            "cf_number_persons": persons,
+            "cf_comment": comment,
+            "cf_client_name": name,
+            "cf_client_phone": phone,
+            "cf_client_email": email,
+            "cf_app_number": number,
+            "cf_hall": str(hall),
             "cf_table": str(table),
+            "cf_created_at": str(created_at)
         }
     }
 
     response = requests.patch(url, headers=headers, data=json.dumps(data))
     result = json.loads(response.text)
-
-    # print(response)
-    # print(result)
+    # future = asyncio.ensure_future(asyncio.sleep(1, result=result.get("data")))
 
     return result.get("data")
 
 
+# async def aupdate_task():
+#     task = asyncio.create_task(update_task(app.date,
+#                         app.time, app.number_persons, app.client_name, app.client_phone, app.client_email,
+#                         app.pk, app.comment, app.hall, app.table, status_id, task_id))
+#     await task
+
+
 # Получение id задачи из Райды
-def get_task_id(pk: int):
+def get_task_id(pk: int, created_at):
     url = f"{settings.RAIDA_API_URL}/api/tasks/{settings.RAIDA_NODE_ID}"
     headers = {"Authorization": f"Bearer {settings.RAIDA_TOKEN}"}
 
@@ -132,7 +149,8 @@ def get_task_id(pk: int):
     result = json.loads(response.text)
 
     for task in result.get('data'):
-        if task.get('custom_fields').get('cf_app_number') == pk:
+        if task.get('custom_fields').get('cf_app_number') == pk \
+                and task.get('custom_fields').get('cf_created_at') == str(created_at):
             return task.get('id')
 
 

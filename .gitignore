@@ -7,4 +7,4 @@ local_settings.py
 
 cache_files/
 venv/
-media/
+pictures/
