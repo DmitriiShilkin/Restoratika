@@ -337,6 +337,7 @@ if ({{ app.number_persons }} < 11) {
   $('.form-check-big').removeClass('d-none');
   $('.form-check-big .results').html({{ app.number_persons }});
  }
+});
 
     function limit_input() {
         var field = document.getElementById("number_field");
@@ -346,8 +347,6 @@ if ({{ app.number_persons }} < 11) {
         }
     }
 
-
-});
 
  </script>
 
